@@ -36,17 +36,17 @@ struct ProgressScreen: View {
         let ids = model.library.items.map(\.id)
         let counts = model.counts(for: ids)
         let started = ids.count - (counts[.new] ?? 0)
-        return VStack(alignment: .leading, spacing: 12) {
+        return VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .firstTextBaseline) {
                 Text("\(started) из \(ids.count) начаты").font(WPFont.nunito(16, .heavy))
                 Spacer()
                 Text("все уровни").font(WPFont.nunito(13)).foregroundStyle(Palette.inkSoft)
             }
             StateBar(counts: counts, total: ids.count, height: 16)
-            stateRow(.mastered, counts, "Стабильность памяти не меньше 21 дня и минимум два верных ответа в разные дни. Изредка проверяем: это не «навсегда».")
-            stateRow(.reviewing, counts, "Уже вспомнили верно, ждут следующей проверки.")
-            stateRow(.learning, counts, "Познакомились, но ещё не закрепили, или ошиблись на последней проверке.")
-            stateRow(.new, counts, nil)
+            stateRow(.mastered, counts)
+            stateRow(.reviewing, counts)
+            stateRow(.learning, counts)
+            stateRow(.new, counts)
         }
         .foregroundStyle(Palette.ink)
         .padding(16)
@@ -54,17 +54,13 @@ struct ProgressScreen: View {
         .fillOutline(Radii.shape(0))
     }
 
-    private func stateRow(_ s: LearningState, _ counts: [LearningState: Int], _ note: String?) -> some View {
-        HStack(alignment: .top, spacing: 10) {
+    private func stateRow(_ s: LearningState, _ counts: [LearningState: Int]) -> some View {
+        HStack(alignment: .center, spacing: 10) {
             RoundedRectangle(cornerRadius: 3)
                 .fill(s == .new ? Color(hex: 0xFFFBF1) : Palette.stateColor(s))
                 .overlay(RoundedRectangle(cornerRadius: 3).stroke(Palette.ink, lineWidth: 2))
                 .frame(width: 12, height: 12)
-                .padding(.top, 4)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(s.progressTitle).font(WPFont.nunito(15, .heavy))
-                if let note { Text(note).font(WPFont.nunito(13)).foregroundStyle(Palette.inkSoft) }
-            }
+            Text(s.progressTitle).font(WPFont.nunito(15, .heavy))
             Spacer()
             Text("\(counts[s] ?? 0)").font(WPFont.rubik(16, false)).monospacedDigit()
         }
