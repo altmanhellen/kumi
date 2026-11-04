@@ -43,7 +43,7 @@ struct SettingsView: View {
                         SettingsRow(title: "Медленное воспроизведение", value: String(format: "%.1f×", model.prefs.slowRate))
                     }
                 }
-                note("Используются только голоса, встроенные в iOS. Новые голоса скачиваются в Настройках iPhone: Универсальный доступ → Устный контент (в iOS 26 — «Чтение вслух») → Голоса.")
+                note("Используются только голоса, встроенные в iOS. Новые голоса скачиваются в Настройках iPhone: Универсальный доступ → Чтение вслух (в более ранних версиях iOS — «Устный контент») → Голоса.")
 
                 section("Обучение")
                 PaperBox(variant: 1) {
@@ -246,6 +246,7 @@ enum VoiceLanguage {
     case english, russian
     var prefix: String { self == .english ? "en" : "ru" }
     var title: String { self == .english ? "Голос для английского" : "Голос для русского" }
+    var settingsName: String { self == .english ? "Английский" : "Русский" }
     var sample: String { self == .english ? "Take your time, there's no rush." : "Не торопитесь, время есть." }
 }
 
@@ -288,7 +289,7 @@ struct VoicePicker: View {
                     }
                 }
                 .padding(.top, 14)
-                Text("Другие голоса можно скачать в Настройках iPhone: Универсальный доступ → Устный контент → Голоса.")
+                Text("Другие голоса можно скачать в Настройках iPhone: Универсальный доступ → Чтение вслух (в более ранних версиях iOS — «Устный контент») → Голоса → \(language.settingsName).")
                     .font(WPFont.nunito(13)).foregroundStyle(Palette.muted).padding(.top, 10).padding(.horizontal, 4)
             }
         }
