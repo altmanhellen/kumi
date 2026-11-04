@@ -18,14 +18,13 @@ struct ProgressScreen: View {
                     statesBox
                     dueBox
                     regularity.padding(.top, 12)
-                    accuracy.id("accuracy")
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, 18)
                 .padding(.bottom, 24)
             }
             #if DEBUG
-            .onAppear { if ProcessInfo.processInfo.arguments.contains("-wpBottom") { proxy.scrollTo("accuracy") } }
+            .onAppear { _ = proxy }
             #endif
             }
             .screenBackground()
