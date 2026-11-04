@@ -8,6 +8,7 @@ struct ProgressScreen: View {
 
     var body: some View {
         NavigationStack(path: $path) {
+            ScrollViewReader { proxy in
             ScrollView {
                 VStack(alignment: .leading, spacing: 14) {
                     HStack(alignment: .bottom) {
@@ -17,11 +18,15 @@ struct ProgressScreen: View {
                     statesBox
                     dueBox
                     regularity.padding(.top, 12)
-                    accuracy
+                    accuracy.id("accuracy")
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, 18)
                 .padding(.bottom, 24)
+            }
+            #if DEBUG
+            .onAppear { if ProcessInfo.processInfo.arguments.contains("-wpBottom") { proxy.scrollTo("accuracy") } }
+            #endif
             }
             .screenBackground()
             .toolbar(.hidden, for: .navigationBar)
@@ -115,16 +120,19 @@ struct ProgressScreen: View {
 
     @ViewBuilder
     private var accuracy: some View {
-        HStack(spacing: 14) {
-            if let a = model.firstAttemptAccuracy {
-                Text("\(Int((a * 100).rounded()))%").font(WPFont.rubik(30))
-                Text("повторений вспомнили с первой попытки за 30 дней").font(WPFont.nunito(14, .semibold))
-            } else {
-                Image(systemName: "chart.line.uptrend.xyaxis").font(.system(size: 24, weight: .semibold))
-                Text("Здесь появится доля повторений, которые вы вспомнили с первой попытки, когда наберётся история.")
-                    .font(WPFont.nunito(14, .semibold))
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Точность памяти").font(WPFont.rubik(17, false))
+            HStack(spacing: 14) {
+                if let a = model.firstAttemptAccuracy {
+                    Text("\(Int((a * 100).rounded()))%").font(WPFont.rubik(30))
+                    Text("фраз вы вспомнили сразу, без подсказок и ошибок · за 30 дней").font(WPFont.nunito(14, .semibold))
+                } else {
+                    Image(systemName: "chart.line.uptrend.xyaxis").font(.system(size: 24, weight: .semibold))
+                    Text("Покажет, какую часть фраз вы вспоминаете сразу, без подсказок и ошибок. Появится после первых \(AppModel.accuracyMinimum) повторений.")
+                        .font(WPFont.nunito(14, .semibold))
+                }
+                Spacer(minLength: 0)
             }
-            Spacer(minLength: 0)
         }
         .foregroundStyle(scheme == .dark ? Palette.text : Palette.ink)
         .padding(.horizontal, 16).padding(.vertical, 12)

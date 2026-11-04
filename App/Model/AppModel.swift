@@ -187,11 +187,15 @@ final class AppModel {
     var studiedDays: Set<Int> { Set(file.logs.map { StudyDay.of($0.time) }) }
 
     /// Share of first attempts on scheduled reviews in the last 30 days that were right.
+    /// Reviews needed before «Точность памяти» shows a number.
+    static let accuracyMinimum = 3
+
+    /// Share of graded reviews in the last 30 days answered right away: no hint, no typo (rated Good).
     var firstAttemptAccuracy: Double? {
         let from = today - 30
         let rated = file.logs.filter { $0.scheduled && $0.rating != nil && StudyDay.of($0.time) > from }
-        guard rated.count >= 3 else { return nil }
-        return Double(rated.filter(\.correct).count) / Double(rated.count)
+        guard rated.count >= Self.accuracyMinimum else { return nil }
+        return Double(rated.filter { $0.rating == .good }.count) / Double(rated.count)
     }
 
     // MARK: Preferences
