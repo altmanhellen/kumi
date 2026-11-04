@@ -137,13 +137,14 @@ struct SettingsView: View {
 
                 section("Данные")
                 PaperBox(variant: 5) {
-                    Button { share { try model.exportJSON() } } label: { SettingsRow(title: "Экспорт прогресса", subtitle: "файл JSON со всем журналом") }
-                    DashedDivider()
-                    Button { share { try model.exportCSV() } } label: { SettingsRow(title: "Список выражений", subtitle: "таблица CSV с состояниями") }
-                    DashedDivider()
-                    Button { importing = true } label: { SettingsRow(title: "Импорт прогресса", subtitle: "объединит записи, ничего не удалит") }
-                    DashedDivider()
-                    Button { confirmReset = true } label: { SettingsRow(title: "Сбросить прогресс", chevron: false) }
+                    Button { confirmReset = true } label: {
+                        Text("Сбросить прогресс")
+                            .font(WPFont.nunito(16, .heavy))
+                            .foregroundStyle(Color(hex: 0xB23A24))
+                            .frame(maxWidth: .infinity, minHeight: 56, alignment: .leading)
+                            .padding(.horizontal, 14)
+                            .contentShape(Rectangle())
+                    }
                 }
                 note("Контент \(model.library.version) · \(model.library.items.count) выражений")
             }
@@ -171,7 +172,7 @@ struct SettingsView: View {
         .confirmationDialog("Удалить весь прогресс на этом iPhone?", isPresented: $confirmReset, titleVisibility: .visible) {
             Button("Сбросить", role: .destructive) { model.resetProgress() }
         } message: {
-            Text("Журнал ответов будет удалён. Сначала можно сделать экспорт.")
+            Text("Журнал ответов на этом iPhone будет удалён.")
         }
         .confirmationDialog("Выйти и удалить аккаунт?", isPresented: $confirmSignOut, titleVisibility: .visible) {
             Button("Удалить аккаунт", role: .destructive) { model.setAccount(nil) }

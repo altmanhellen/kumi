@@ -266,7 +266,7 @@ struct RecognizeStep: View {
                     if step.retry {
                         Tag(text: "Ещё раз · с опорой", icon: "arrow.uturn.backward", fill: Palette.peach).padding(.top, 18)
                     }
-                    Text("Выберите выражение").font(WPFont.hand(22)).foregroundStyle(Color(hex: 0x645C52)).padding(.top, 16)
+                    Text(WPFont.handText("Выберите выражение")).font(WPFont.hand(22)).foregroundStyle(Color(hex: 0x645C52)).padding(.top, 16)
                     Text(question)
                         .font(WPFont.rubik(24))
                         .foregroundStyle(Palette.text)

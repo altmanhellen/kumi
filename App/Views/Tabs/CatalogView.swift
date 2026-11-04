@@ -419,7 +419,7 @@ struct ExpressionSheet: View {
                     .frame(width: 270, alignment: .leading)
                 }
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Значение").font(WPFont.hand(21)).foregroundStyle(Palette.muted)
+                    Text(WPFont.handText("Значение")).font(WPFont.hand(21)).foregroundStyle(Palette.muted)
                     Text(item.meaningEn).font(WPFont.nunito(18, .bold)).foregroundStyle(Palette.text)
                     if model.prefs.showTranslation {
                         Text(item.translationRu).font(WPFont.nunito(16)).foregroundStyle(Palette.secondary)
@@ -497,7 +497,7 @@ struct ExampleBox: View {
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
             VStack(alignment: .leading, spacing: 6) {
-                Text(title).font(WPFont.hand(21)).foregroundStyle(Palette.muted)
+                Text(WPFont.handText(title)).font(WPFont.hand(21)).foregroundStyle(Palette.muted)
                 Text(Self.bolded(en, highlight)).font(WPFont.nunito(17)).foregroundStyle(Palette.text)
                 if let ru { Text(ru).font(WPFont.nunito(15)).foregroundStyle(Palette.muted) }
             }

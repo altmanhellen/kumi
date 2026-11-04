@@ -76,6 +76,10 @@ enum WPFont {
         return .custom(name, size: size, relativeTo: style)
     }
 
+    /// Caveat letters (like the hook of «г») reach past their advance width, so hand-written labels
+    /// get a little trailing room to keep the last glyph from being cut.
+    static func handText(_ text: String) -> String { text + "\u{2009}" }
+
     static func hand(_ size: CGFloat) -> Font {
         .custom("CaveatRoman-Bold", size: size, relativeTo: .headline)
     }

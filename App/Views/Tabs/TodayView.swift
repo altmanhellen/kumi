@@ -155,7 +155,7 @@ struct TodayView: View {
         return PatternCard(style: .hatch, variant: 2, blobStart: 0.77) {
             HStack(spacing: 12) {
                 VStack(alignment: .leading, spacing: 1) {
-                    Text("Выражение дня").font(WPFont.hand(19)).foregroundStyle(Color(hex: 0x5A3A26))
+                    Text(WPFont.handText("Выражение дня")).font(WPFont.hand(19)).foregroundStyle(Color(hex: 0x5A3A26))
                     Text(item.phrase).font(WPFont.rubik(21, false)).environment(\.locale, Locale(identifier: "en"))
                     if model.prefs.showTranslation {
                         Text(item.translationRu).font(WPFont.nunito(14)).foregroundStyle(Color(hex: 0x4A3A2E))

@@ -104,7 +104,7 @@ struct Eyebrow: View {
     let text: String
     var size: CGFloat = 23
     var body: some View {
-        Text(text).font(WPFont.hand(size)).foregroundStyle(Palette.muted)
+        Text(WPFont.handText(text)).font(WPFont.hand(size)).foregroundStyle(Palette.muted)
     }
 }
 
