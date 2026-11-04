@@ -36,30 +36,30 @@ struct ProgressScreen: View {
             HStack(alignment: .firstTextBaseline) {
                 Text("\(started) из \(ids.count) начаты").font(WPFont.nunito(16, .heavy))
                 Spacer()
-                Text("все уровни").font(WPFont.nunito(13)).foregroundStyle(Palette.muted)
+                Text("все уровни").font(WPFont.nunito(13)).foregroundStyle(Palette.inkSoft)
             }
-            StateBar(counts: counts, total: ids.count, height: 16, onCard: false)
+            StateBar(counts: counts, total: ids.count, height: 16)
             stateRow(.mastered, counts, "Стабильность памяти не меньше 21 дня и минимум два верных ответа в разные дни. Изредка проверяем: это не «навсегда».")
             stateRow(.reviewing, counts, "Уже вспомнили верно, ждут следующей проверки.")
             stateRow(.learning, counts, "Познакомились, но ещё не закрепили, или ошиблись на последней проверке.")
             stateRow(.new, counts, nil)
         }
-        .foregroundStyle(Palette.text)
+        .foregroundStyle(Palette.ink)
         .padding(16)
-        .background(Palette.paper, in: Radii.shape(0))
-        .boxOutline(Radii.shape(0))
+        .background(Color(hex: 0xE6DEF6), in: Radii.shape(0))
+        .fillOutline(Radii.shape(0))
     }
 
     private func stateRow(_ s: LearningState, _ counts: [LearningState: Int], _ note: String?) -> some View {
         HStack(alignment: .top, spacing: 10) {
             RoundedRectangle(cornerRadius: 3)
-                .fill(s == .new ? Palette.background : Palette.stateColor(s))
-                .overlay(RoundedRectangle(cornerRadius: 3).stroke(Palette.outline, lineWidth: 2))
+                .fill(s == .new ? Color(hex: 0xFFFBF1) : Palette.stateColor(s))
+                .overlay(RoundedRectangle(cornerRadius: 3).stroke(Palette.ink, lineWidth: 2))
                 .frame(width: 12, height: 12)
                 .padding(.top, 4)
             VStack(alignment: .leading, spacing: 2) {
                 Text(s.title).font(WPFont.nunito(15, .heavy))
-                if let note { Text(note).font(WPFont.nunito(13)).foregroundStyle(Palette.muted) }
+                if let note { Text(note).font(WPFont.nunito(13)).foregroundStyle(Palette.inkSoft) }
             }
             Spacer()
             Text("\(counts[s] ?? 0)").font(WPFont.rubik(16, false)).monospacedDigit()
