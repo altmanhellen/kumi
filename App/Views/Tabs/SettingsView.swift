@@ -4,6 +4,7 @@ import UniformTypeIdentifiers
 
 struct SettingsView: View {
     @Environment(AppModel.self) private var model
+    @Environment(\.colorScheme) private var scheme
     @Environment(\.dismiss) private var dismiss
     @State private var shareURL: URL?
     @State private var importing = false
@@ -12,6 +13,7 @@ struct SettingsView: View {
     @State private var confirmSignOut = false
 
     var body: some View {
+        ScrollViewReader { proxy in
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 VStack(alignment: .leading, spacing: 2) {
@@ -120,7 +122,8 @@ struct SettingsView: View {
                         } onCompletion: { result in
                             handleSignIn(result)
                         }
-                        .signInWithAppleButtonStyle(.black)
+                        .signInWithAppleButtonStyle(scheme == .dark ? .white : .black)
+                        .id(scheme)
                         .frame(height: 50)
                         .padding(12)
                     }
@@ -130,22 +133,27 @@ struct SettingsView: View {
                      : "Синхронизация с сервером Word Partners включится, когда подключим сервер. Сейчас прогресс хранится на этом iPhone и попадает в его резервную копию iCloud.")
 
                 section("Данные")
-                PaperBox(variant: 5) {
-                    Button { confirmReset = true } label: {
-                        Text("Сбросить прогресс")
-                            .font(WPFont.nunito(16, .heavy))
-                            .foregroundStyle(Color(hex: 0xB23A24))
-                            .frame(maxWidth: .infinity, minHeight: 56, alignment: .leading)
-                            .padding(.horizontal, 14)
-                            .contentShape(Rectangle())
-                    }
+                Button { confirmReset = true } label: {
+                    Text("Сбросить прогресс")
+                        .font(WPFont.nunito(16, .heavy))
+                        .foregroundStyle(Palette.danger)
+                        .frame(maxWidth: .infinity, minHeight: 56, alignment: .leading)
+                        .padding(.horizontal, 14)
+                        .background(Palette.paper, in: Radii.shape(5))
+                        .overlay(Radii.shape(5).stroke(Palette.danger, lineWidth: 2.5))
+                        .contentShape(Rectangle())
                 }
                 note("Контент \(model.library.version) · \(model.library.items.count) выражений")
+                    .id("bottom")
             }
             .buttonStyle(.plain)
             .padding(.horizontal, 20)
             .padding(.top, 8)
             .padding(.bottom, 30)
+        }
+        #if DEBUG
+        .onAppear { if ProcessInfo.processInfo.arguments.contains("-wpBottom") { proxy.scrollTo("bottom") } }
+        #endif
         }
         .screenBackground()
         .toolbar(.hidden, for: .navigationBar)

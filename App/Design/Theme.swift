@@ -33,6 +33,7 @@ enum Palette {
     /// Outline of selected items.
     static let emphasis = Color(light: 0x1E1A16, dark: 0xF1E8D6)
     static let chevron = Color(light: 0x645C52, dark: 0x6B6157)
+    static let danger = Color(light: 0xB23A24, dark: 0xE8836E)
     static let paper = Color(light: 0xFFFBF1, dark: 0x2A2521)
     static let field = Color(light: 0xFFF8EA, dark: 0x2F2925)
     static let divider = Color(light: 0xCFC4AE, dark: 0x3A332D)

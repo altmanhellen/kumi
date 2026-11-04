@@ -317,7 +317,7 @@ struct PrefsScreen: View {
                 VStack(alignment: .leading, spacing: 0) {
                     Eyebrow(text: "Необязательно", size: 22)
                     ScreenTitle(text: "Перевод и озвучка")
-                    Text("Всё это можно поменять позже в настройках.").font(WPFont.nunito(16)).foregroundStyle(Palette.muted).padding(.top, 6)
+                    Text("Можно изменить позже в настройках.").font(WPFont.nunito(16)).foregroundStyle(Palette.muted).padding(.top, 6)
 
                     PaperBox(variant: 0) {
                         Toggle(isOn: Binding(get: { model.prefs.showTranslation }, set: { v in model.updatePrefs { $0.showTranslation = v } })) {
