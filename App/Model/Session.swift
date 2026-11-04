@@ -86,7 +86,7 @@ extension AppModel {
         synonymGroups.contains { $0.contains(a) && $0.contains(b) }
     }
 
-    /// The right expression, one written distractor and up to two other expressions learned in this session.
+    /// Three options: the right expression, one written distractor and one other expression from this session.
     func recognitionOptions(for item: Collocation) -> [String] {
         var options = [item.phrase]
         let written = item.recognition.options.filter { $0 != item.phrase }
@@ -96,8 +96,8 @@ extension AppModel {
             .compactMap { library[$0]?.phrase }
             .filter { !options.contains($0) && !Self.areSynonyms($0, item.phrase) }
             .shuffled()
-        options.append(contentsOf: classmates.prefix(2))
-        for w in written.dropFirst() where options.count < 4 && !options.contains(w) { options.append(w) }
+        options.append(contentsOf: classmates.prefix(1))
+        for w in written.dropFirst() where options.count < 3 && !options.contains(w) { options.append(w) }
         return options.shuffled()
     }
 

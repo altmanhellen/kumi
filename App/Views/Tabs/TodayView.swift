@@ -124,8 +124,6 @@ struct TodayView: View {
                     Button("Ещё 5 новых") { model.startExtraNew() }
                         .font(WPFont.nunito(15, .heavy)).underline().foregroundStyle(Palette.ink)
                         .frame(minHeight: 44)
-                    Text("Лишние новые сегодня — это повторения через несколько дней.")
-                        .font(WPFont.nunito(13)).foregroundStyle(Palette.inkSoft)
                 }
             }
             .padding(22)

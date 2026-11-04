@@ -118,53 +118,101 @@ struct IntroStep: View {
     }
 }
 
-/// Colored tile with a patterned corner and the expression on a light label.
+/// Colored option card with a selection circle on the right.
 struct OptionTile: View {
     let text: String
     let style: PatternStyle
     var selected = false
+    /// Another card is selected, so this one steps back.
+    var dimmed = false
     var state: OptionState = .idle
+    /// Translation shown under the phrase once the answer is checked.
+    var note: String?
     let action: () -> Void
 
-    enum OptionState { case idle, right, wrong, dimmed }
+    enum OptionState { case idle, right, wrong }
+
+    private var lifted: Bool { selected || state == .right }
 
     var body: some View {
         Button(action: action) {
-            ZStack(alignment: .leading) {
+            HStack(spacing: 12) {
+                VStack(alignment: .leading, spacing: 5) {
+                    Text(text)
+                        .font(WPFont.rubik(20, false))
+                        .foregroundStyle(Palette.ink)
+                        .multilineTextAlignment(.leading)
+                        .padding(.horizontal, 14).padding(.vertical, 6)
+                        .background(Palette.cream.opacity(0.92), in: RoundedRectangle(cornerRadius: 8))
+                    if let note {
+                        Text(note)
+                            .font(WPFont.nunito(13, .bold))
+                            .foregroundStyle(Palette.ink)
+                            .multilineTextAlignment(.leading)
+                            .padding(.horizontal, 10).padding(.vertical, 3)
+                            .background(Palette.cream, in: RoundedRectangle(cornerRadius: 6))
+                    }
+                }
+                .padding(.leading, 18)
+                .padding(.vertical, note == nil ? 12 : 8)
+                Spacer(minLength: 8)
+                circle.padding(.trailing, 16)
+            }
+            .frame(maxWidth: .infinity, minHeight: 76)
+            .background {
                 ZStack {
                     style.fill
                     PatternFill(style: style).opacity(0.55).mask(
                         LinearGradient(colors: [.clear, .black], startPoint: .leading, endPoint: .trailing)
                     )
                 }
+                .opacity(state == .wrong ? 0.4 : 1)
+                .background(Palette.background)
                 .clipShape(Radii.shape(style.rawValue))
-                Text(text)
-                    .font(WPFont.rubik(20, false))
-                    .foregroundStyle(Palette.ink)
-                    .multilineTextAlignment(.leading)
-                    .padding(.horizontal, 14).padding(.vertical, 6)
-                    .background(Palette.cream.opacity(0.92), in: RoundedRectangle(cornerRadius: 8))
-                    .padding(.horizontal, 18)
-                if state == .right || state == .wrong {
-                    Image(systemName: state == .right ? "checkmark" : "xmark")
-                        .font(.system(size: 15, weight: .black))
-                        .foregroundStyle(Color(hex: 0xF4EDDC))
-                        .frame(width: 30, height: 30)
-                        .background(Circle().fill(Palette.ink))
-                        .frame(maxWidth: .infinity, alignment: .trailing)
-                        .padding(.trailing, 14)
-                }
             }
-            .frame(maxWidth: .infinity, minHeight: 76)
             .overlay(Radii.shape(style.rawValue).stroke(Palette.outline, lineWidth: 2.5))
-            .background(Radii.shape(style.rawValue).fill(Palette.outline).offset(x: selected ? 5 : 0, y: selected ? 5 : 0))
-            .offset(x: selected ? -3 : 0, y: selected ? -3 : 0)
-            .opacity(state == .dimmed ? 0.55 : 1)
+            .background(Radii.shape(style.rawValue).fill(Palette.outline).offset(x: lifted ? 5 : 0, y: lifted ? 5 : 0))
+            .offset(x: lifted ? -3 : 0, y: lifted ? -3 : 0)
+            .opacity(dimmed ? 0.5 : 1)
             .animation(.easeOut(duration: 0.15), value: selected)
         }
         .buttonStyle(.plain)
-        .accessibilityAddTraits(selected ? .isSelected : [])
+        .accessibilityAddTraits(lifted ? .isSelected : [])
         .accessibilityValue(state == .right ? "верно" : state == .wrong ? "неверно" : "")
+    }
+
+    private var circle: some View {
+        let filled = lifted
+        return Circle()
+            .fill(filled ? Palette.ink : Color(hex: 0xFFFBF1))
+            .overlay(Circle().stroke(Palette.ink, lineWidth: 2.5))
+            .overlay {
+                if filled {
+                    Image(systemName: "checkmark").font(.system(size: 14, weight: .black)).foregroundStyle(Color(hex: 0xFFFBF1))
+                }
+            }
+            .frame(width: 32, height: 32)
+            .opacity(state == .wrong ? 0.5 : 1)
+            .accessibilityHidden(true)
+    }
+}
+
+/// Bottom sheet with a wavy top edge.
+struct WavyTop: Shape {
+    func path(in r: CGRect) -> Path {
+        var p = Path()
+        let amp: CGFloat = 7, wave: CGFloat = 46
+        p.move(to: CGPoint(x: r.minX, y: r.minY + amp))
+        var x = r.minX
+        while x < r.maxX {
+            p.addQuadCurve(to: CGPoint(x: min(x + wave, r.maxX), y: r.minY + amp),
+                           control: CGPoint(x: x + wave / 2, y: r.minY - amp))
+            x += wave
+        }
+        p.addLine(to: CGPoint(x: r.maxX, y: r.maxY))
+        p.addLine(to: CGPoint(x: r.minX, y: r.maxY))
+        p.closeSubpath()
+        return p
     }
 }
 
@@ -183,14 +231,10 @@ struct RecognizeStep: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            ScrollView {
-                if checked { result } else { task }
-            }
-            .padding(.horizontal, 20)
+            ScrollView { task }
+                .padding(.horizontal, 20)
             if checked {
-                PrimaryButton(title: "Дальше") { model.advance() }
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 8)
+                sheet
             } else {
                 PrimaryButton(title: "Проверить", enabled: picked != nil) {
                     guard let p = picked else { return }
@@ -208,6 +252,12 @@ struct RecognizeStep: View {
                 picked = options.first { $0 != item.phrase }
                 correct = model.answerRecognition(picked!)
                 checked = true
+            } else if ProcessInfo.processInfo.arguments.contains("-wpPickRight") {
+                picked = item.phrase
+                if ProcessInfo.processInfo.arguments.contains("-wpCheck") {
+                    correct = model.answerRecognition(item.phrase)
+                    checked = true
+                }
             }
             #endif
         }
@@ -226,54 +276,79 @@ struct RecognizeStep: View {
                 .padding(.top, 8)
             VStack(spacing: 14) {
                 ForEach(Array(options.enumerated()), id: \.element) { i, o in
-                    OptionTile(text: o, style: .of(i), selected: picked == o) { picked = o }
+                    OptionTile(
+                        text: o, style: .of(i),
+                        selected: !checked && picked == o,
+                        dimmed: !checked && picked != nil && picked != o,
+                        state: checked ? (o == item.phrase ? .right : .wrong) : .idle,
+                        note: checked ? model.optionMeaning(o, for: item) : nil
+                    ) {
+                        if !checked { picked = o }
+                    }
                 }
             }
-            .padding(.top, 24)
+            .padding(.top, checked ? 18 : 24)
         }
-        .padding(.bottom, 12)
+        .padding(.bottom, 16)
     }
 
-    /// The verdict card sits high on the screen; the breakdown of the other options goes under it.
-    private var result: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            Text(question)
-                .font(WPFont.nunito(16, .semibold))
-                .foregroundStyle(Palette.muted)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(.top, 16)
-            FeedbackCard(
-                title: correct ? "Верно!" : "Не совсем",
-                good: correct,
-                text: correct ? nil : model.optionExplanation(picked ?? "", for: item),
-                phrase: item.phrase,
-                meaning: model.prefs.showTranslation ? item.translationRu : item.meaningEn,
-                sentence: item.example?.en ?? item.gap.fullSentence,
-                translation: model.prefs.showTranslation ? (item.example?.ru ?? item.gap.translationRu) : nil,
-                highlight: item.phrase,
-                listen: { model.speakEnglish(item.example?.en ?? item.gap.fullSentence) }
-            )
-            VStack(spacing: 8) {
-                ForEach(options.filter { $0 != item.phrase }, id: \.self) { o in
-                    HStack(alignment: .top, spacing: 10) {
-                        Image(systemName: o == picked ? "xmark.circle.fill" : "circle.dashed")
-                            .font(.system(size: 18, weight: .semibold))
-                            .foregroundStyle(Palette.muted)
-                        VStack(alignment: .leading, spacing: 1) {
-                            Text(o).font(WPFont.rubik(17, false)).foregroundStyle(Palette.text)
-                            Text(model.optionMeaning(o, for: item)).font(WPFont.nunito(14)).foregroundStyle(Palette.muted)
-                                .fixedSize(horizontal: false, vertical: true)
-                        }
-                        Spacer(minLength: 0)
-                    }
-                    .padding(.horizontal, 14).padding(.vertical, 10)
-                    .background(Palette.paper, in: Radii.shape(2))
-                    .overlay(Radii.shape(2).stroke(Palette.outline, lineWidth: 2))
-                    .accessibilityElement(children: .combine)
-                }
+    private var sheet: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(correct ? "Верно!" : "Не совсем").font(WPFont.rubik(28)).accessibilityAddTraits(.isHeader)
+            if !correct, let why = model.optionExplanation(picked ?? "", for: item) {
+                Text(why).font(WPFont.nunito(15)).fixedSize(horizontal: false, vertical: true)
             }
+            (Text(item.phrase).font(WPFont.nunito(16, .heavy)) + Text(" — \(model.prefs.showTranslation ? item.translationRu : item.meaningEn)").font(WPFont.nunito(16)))
+                .fixedSize(horizontal: false, vertical: true)
+            let sentence = item.example?.en ?? item.gap.fullSentence
+            HStack(alignment: .top, spacing: 10) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(ExampleBox.bolded(sentence, item.phrase)).font(WPFont.nunito(16, .semibold))
+                        .fixedSize(horizontal: false, vertical: true)
+                    if model.prefs.showTranslation {
+                        Text(item.example?.ru ?? item.gap.translationRu).font(WPFont.nunito(14)).foregroundStyle(Palette.inkSoft)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                Spacer(minLength: 0)
+                ListenButton(label: "Послушать пример") { model.speakEnglish(sentence) }
+            }
+            .padding(.horizontal, 14).padding(.vertical, 12)
+            .background(Palette.cream, in: Radii.shape(1))
+            .overlay(Radii.shape(1).stroke(Palette.ink, lineWidth: 2.5))
+            PrimaryButtonInk(title: "Дальше") { model.advance() }
+                .padding(.top, 6)
         }
-        .padding(.bottom, 12)
+        .foregroundStyle(Palette.ink)
+        .padding(.horizontal, 20)
+        .padding(.top, 26)
+        .padding(.bottom, 8)
+        .frame(maxWidth: .infinity, alignment: .topLeading)
+        .fixedSize(horizontal: false, vertical: true)
+        .background {
+            WavyTop()
+                .fill(correct ? Palette.teal : Palette.peach)
+                .overlay(WavyTop().stroke(Palette.outline, lineWidth: 2.5))
+                .ignoresSafeArea(edges: .bottom)
+        }
+        .transition(.move(edge: .bottom))
+    }
+}
+
+/// Main button that stays dark on light colored panels in both themes.
+struct PrimaryButtonInk: View {
+    let title: String
+    let action: () -> Void
+    var body: some View {
+        Button(action: action) {
+            Text(title)
+                .font(WPFont.rubik(19, false, relativeTo: .headline))
+                .foregroundStyle(Color(hex: 0xF4EDDC))
+                .frame(maxWidth: .infinity, minHeight: 58)
+                .background(Palette.ink)
+                .clipShape(TornShape())
+        }
+        .buttonStyle(PressStyle())
     }
 }
 
