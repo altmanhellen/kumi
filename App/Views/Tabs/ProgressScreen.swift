@@ -178,7 +178,7 @@ struct DayCell: View {
             .fill(future ? Color.clear : (studied ? Palette.blue : (dark ? Palette.paper : Color(hex: 0xFFFBF1))))
             .overlay {
                 if future {
-                    shape.stroke(dark ? Color(hex: 0x3A332D) : Palette.divider, style: StrokeStyle(lineWidth: dark ? 1.5 : 2, dash: [4, 3]))
+                    shape.stroke(dark ? Color(hex: 0x6B6157) : Palette.divider, style: StrokeStyle(lineWidth: dark ? 1.5 : 2, dash: [4, 3]))
                 } else if dark {
                     shape.stroke(studied ? Palette.blue : Palette.outline, lineWidth: 1.5)
                 } else {

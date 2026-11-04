@@ -27,7 +27,7 @@ enum Palette {
     static let muted = Color(light: 0x645C52, dark: 0xA89D8C)
     static let secondary = Color(light: 0x3D3730, dark: 0xA89D8C)
     /// Box and list outlines. Quiet in dark mode, where bright cream is kept for emphasis.
-    static let outline = Color(light: 0x1E1A16, dark: 0x4A423A)
+    static let outline = Color(light: 0x1E1A16, dark: 0x7A7064)
     /// Outline of illustrated cards and the progress bar.
     static let cardOutline = Color(light: 0x1E1A16, dark: 0x5E554B)
     /// Outline of selected items.

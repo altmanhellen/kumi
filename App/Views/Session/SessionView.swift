@@ -231,7 +231,7 @@ struct OptionTile: View {
                     .overlay(Circle().fill(Palette.ink).frame(width: 12, height: 12))
                     .frame(width: 26, height: 26)
             } else {
-                Circle().stroke(Color(light: 0x8A8073, dark: 0x6B6157), style: StrokeStyle(lineWidth: 2, dash: [4, 3]))
+                Circle().stroke(Color(light: 0x8A8073, dark: 0x7A7064), style: StrokeStyle(lineWidth: 2, dash: [4, 3]))
                     .frame(width: 26, height: 26)
             }
         }
