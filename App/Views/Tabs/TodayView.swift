@@ -117,7 +117,7 @@ struct TodayView: View {
         }
     }
 
-    private func phrases(_ n: Int) -> String { "\(n) \(Plural.form(n, "фраза", "фразы", "фраз"))" }
+    private func phrases(_ n: Int) -> String { "\(n) \(Plural.form(n, "фразу", "фразы", "фраз"))" }
 
     /// Today's progress: only the rows above zero. Hidden when nothing happened today.
     @ViewBuilder
