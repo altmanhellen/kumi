@@ -61,7 +61,7 @@ struct SummaryView: View {
                     .foregroundStyle(Palette.ink)
                     .padding(.horizontal, 14).padding(.vertical, 12)
                     .background(Palette.blush, in: Radii.shape(1))
-                    .cardOutline(Radii.shape(1))
+                    .fillOutline(Radii.shape(1))
                     .padding(.top, 16)
 
                     HStack(spacing: 6) {
@@ -90,7 +90,7 @@ struct SummaryView: View {
         .padding(12)
         .frame(maxWidth: .infinity, minHeight: 96, alignment: .topLeading)
         .background(fill, in: Radii.shape(i))
-        .cardOutline(Radii.shape(i))
+        .fillOutline(Radii.shape(i))
         .accessibilityElement(children: .combine)
     }
 }

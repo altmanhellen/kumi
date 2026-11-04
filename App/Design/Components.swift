@@ -26,7 +26,7 @@ struct PatternCard<Content: View>: View {
                 .accessibilityHidden(true)
             }
             .overlay {
-                WobblyRect(variant: variant).stroke(Palette.cardOutline, style: StrokeStyle(lineWidth: scheme == .dark ? 2 : 2.5, lineJoin: .round))
+                WobblyRect(variant: variant).stroke(Palette.cardOutline, style: StrokeStyle(lineWidth: scheme == .dark ? 0 : 2.5, lineJoin: .round))
             }
             .foregroundStyle(Palette.ink)
     }
@@ -160,23 +160,34 @@ struct WPToggleStyle: ToggleStyle {
         } label: {
             HStack(spacing: 12) {
                 configuration.label.frame(maxWidth: .infinity, alignment: .leading)
-                Capsule()
-                    .fill(configuration.isOn ? Palette.blue : Palette.switchOff)
-                    .frame(width: 52, height: 32)
-                    .boxOutline(Capsule())
-                    .overlay(alignment: configuration.isOn ? .trailing : .leading) {
-                        Circle()
-                            .fill(Color(hex: 0xFFFBF1))
-                            .overlay(Circle().stroke(Palette.ink, lineWidth: 2))
-                            .frame(width: 23, height: 23)
-                            .padding(4.5)
-                    }
-                    .animation(.easeOut(duration: 0.15), value: configuration.isOn)
+                ToggleTrack(isOn: configuration.isOn)
             }
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .accessibilityRepresentation { Toggle(isOn: configuration.$isOn) { configuration.label } }
+    }
+}
+
+/// Switch track: ink outline in light mode, solid track without outline in dark mode.
+struct ToggleTrack: View {
+    @Environment(\.colorScheme) private var scheme
+    let isOn: Bool
+
+    var body: some View {
+        let dark = scheme == .dark
+        Capsule()
+            .fill(isOn ? Palette.blue : Palette.switchOff)
+            .frame(width: 52, height: 32)
+            .overlay(Capsule().stroke(Palette.ink, lineWidth: dark ? 0 : 2.5))
+            .overlay(alignment: isOn ? .trailing : .leading) {
+                Circle()
+                    .fill(dark ? Color(hex: 0xF1E8D6) : Color(hex: 0xFFFBF1))
+                    .overlay(Circle().stroke(Palette.ink, lineWidth: dark ? 0 : 2))
+                    .frame(width: 23, height: 23)
+                    .padding(4.5)
+            }
+            .animation(.easeOut(duration: 0.15), value: isOn)
     }
 }
 
@@ -206,9 +217,12 @@ struct SettingsRow: View {
 
 /// Bar with one segment per learning state.
 struct StateBar: View {
+    @Environment(\.colorScheme) private var scheme
     let counts: [LearningState: Int]
     let total: Int
     var height: CGFloat = 10
+    /// On a light colored card the track stays cream; on a plain dark screen it goes dark and quiet.
+    var onCard = true
 
     var body: some View {
         GeometryReader { geo in
@@ -223,25 +237,28 @@ struct StateBar: View {
             }
         }
         .frame(height: height)
-        .background(Color(hex: 0xFFFBF1))
+        .background(onCard ? Color(hex: 0xFFFBF1) : Palette.track)
         .clipShape(RoundedRectangle(cornerRadius: height * 0.6))
-        .overlay(RoundedRectangle(cornerRadius: height * 0.6).stroke(Palette.ink, lineWidth: 2))
+        .overlay(RoundedRectangle(cornerRadius: height * 0.6)
+            .stroke(onCard || scheme != .dark ? Palette.ink : Palette.outline, lineWidth: onCard || scheme != .dark ? 2 : 1.5))
         .accessibilityHidden(true)
     }
 }
 
 struct StatePill: View {
+    @Environment(\.colorScheme) private var scheme
     let state: LearningState
 
     var body: some View {
+        let dark = scheme == .dark
         Text(state.title)
             .font(WPFont.nunito(12, .heavy))
-            .foregroundStyle(state == .mastered || state == .reviewing ? .white : Palette.text)
+            .foregroundStyle(state == .mastered || state == .reviewing ? .white : (state == .new ? Palette.text : Palette.ink))
             .padding(.horizontal, 10)
             .padding(.vertical, 3)
             .background(state == .new ? Color.clear : Palette.stateColor(state), in: Capsule())
             .overlay(Capsule().stroke(state == .new ? Palette.outline : Palette.ink,
-                                      style: StrokeStyle(lineWidth: 2, dash: state == .new ? [4, 3] : [])))
+                                      style: StrokeStyle(lineWidth: state != .new && dark ? 0 : (dark ? 1.5 : 2), dash: state == .new ? [4, 3] : [])))
     }
 }
 
@@ -265,18 +282,20 @@ struct LegendDot: View {
 struct SessionProgressBar: View {
     let value: Double
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.colorScheme) private var scheme
 
     var body: some View {
+        let dark = scheme == .dark
         GeometryReader { geo in
             Rectangle()
                 .fill(Palette.blue)
                 .frame(width: max(geo.size.width * value, value > 0 ? 6 : 0))
                 .animation(reduceMotion ? nil : .easeOut(duration: 0.25), value: value)
         }
-        .frame(height: 14)
-        .background(Color(hex: 0xFFFBF1))
-        .clipShape(RoundedRectangle(cornerRadius: 9))
-        .overlay(RoundedRectangle(cornerRadius: 9).stroke(Palette.cardOutline, lineWidth: 2))
+        .frame(height: dark ? 10 : 14)
+        .background(dark ? Color(hex: 0x3A332D) : Color(hex: 0xFFFBF1))
+        .clipShape(RoundedRectangle(cornerRadius: dark ? 5 : 9))
+        .overlay(RoundedRectangle(cornerRadius: 9).stroke(Palette.ink, lineWidth: dark ? 0 : 2.5))
     }
 }
 
@@ -294,7 +313,7 @@ struct Tag: View {
         .padding(.horizontal, 12)
         .padding(.vertical, 4)
         .background(fill, in: UnevenRoundedRectangle(topLeadingRadius: 14, bottomLeadingRadius: 10, bottomTrailingRadius: 14, topTrailingRadius: 10))
-        .overlay(UnevenRoundedRectangle(topLeadingRadius: 14, bottomLeadingRadius: 10, bottomTrailingRadius: 14, topTrailingRadius: 10).stroke(Palette.ink, lineWidth: 2))
+        .modifier(BoxOutline(shape: UnevenRoundedRectangle(topLeadingRadius: 14, bottomLeadingRadius: 10, bottomTrailingRadius: 14, topTrailingRadius: 10), color: Palette.ink, light: 2, dark: 0))
     }
 }
 

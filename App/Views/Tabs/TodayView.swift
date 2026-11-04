@@ -145,7 +145,7 @@ struct TodayView: View {
             .foregroundStyle(Palette.ink)
             .padding(14)
             .background(Palette.yellow, in: Radii.shape(1))
-            .cardOutline(Radii.shape(1))
+            .fillOutline(Radii.shape(1))
         }
         .buttonStyle(PressStyle())
     }

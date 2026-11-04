@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ProgressScreen: View {
     @Environment(AppModel.self) private var model
+    @Environment(\.colorScheme) private var scheme
 
     @State private var path = NavigationPath()
 
@@ -37,7 +38,7 @@ struct ProgressScreen: View {
                 Spacer()
                 Text("все уровни").font(WPFont.nunito(13)).foregroundStyle(Palette.muted)
             }
-            StateBar(counts: counts, total: ids.count, height: 16)
+            StateBar(counts: counts, total: ids.count, height: 16, onCard: false)
             stateRow(.mastered, counts, "Стабильность памяти не меньше 21 дня и минимум два верных ответа в разные дни. Изредка проверяем: это не «навсегда».")
             stateRow(.reviewing, counts, "Уже вспомнили верно, ждут следующей проверки.")
             stateRow(.learning, counts, "Познакомились, но ещё не закрепили, или ошиблись на последней проверке.")
@@ -77,7 +78,7 @@ struct ProgressScreen: View {
         .foregroundStyle(Palette.ink)
         .padding(.horizontal, 16).padding(.vertical, 12)
         .background(Palette.yellow, in: Radii.shape(2))
-        .cardOutline(Radii.shape(2))
+        .fillOutline(Radii.shape(2))
         .accessibilityElement(children: .combine)
     }
 
@@ -98,12 +99,7 @@ struct ProgressScreen: View {
             }
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 6), count: 7), spacing: 6) {
                 ForEach(Array(days.enumerated()), id: \.offset) { i, d in
-                    let future = d > today
-                    Radii.shape(i)
-                        .fill(future ? Color.clear : (studied.contains(d) ? Palette.blue : Palette.paper))
-                        .overlay(Radii.shape(i).stroke(future ? Palette.divider : Palette.outline,
-                                                       style: StrokeStyle(lineWidth: 2, dash: future ? [4, 3] : [])))
-                        .frame(height: 26)
+                    DayCell(index: i, studied: studied.contains(d), future: d > today, isToday: d == today)
                 }
             }
             .accessibilityElement()
@@ -130,10 +126,39 @@ struct ProgressScreen: View {
             }
             Spacer(minLength: 0)
         }
-        .foregroundStyle(Palette.ink)
+        .foregroundStyle(scheme == .dark ? Palette.text : Palette.ink)
         .padding(.horizontal, 16).padding(.vertical, 12)
-        .background(Palette.teal, in: Radii.shape(1))
-        .cardOutline(Radii.shape(1))
+        .background(scheme == .dark ? Palette.paper : Palette.teal, in: Radii.shape(1))
+        .boxOutline(Radii.shape(1))
         .accessibilityElement(children: .combine)
+    }
+}
+
+/// One day in the «Регулярность» grid. In dark mode filled days have no border and only today gets a bright outline.
+struct DayCell: View {
+    @Environment(\.colorScheme) private var scheme
+    let index: Int
+    let studied: Bool
+    let future: Bool
+    let isToday: Bool
+
+    var body: some View {
+        let dark = scheme == .dark
+        let shape = Radii.shape(index)
+        shape
+            .fill(future ? Color.clear : (studied ? Palette.blue : (dark ? Palette.paper : Color(hex: 0xFFFBF1))))
+            .overlay {
+                if future {
+                    shape.stroke(dark ? Color(hex: 0x3A332D) : Palette.divider, style: StrokeStyle(lineWidth: dark ? 1.5 : 2, dash: [4, 3]))
+                } else if dark {
+                    shape.stroke(studied ? Palette.blue : Palette.outline, lineWidth: 1.5)
+                } else {
+                    shape.stroke(Palette.ink, lineWidth: 2)
+                }
+            }
+            .overlay {
+                if isToday && dark { shape.stroke(Color(hex: 0xF1E8D6), lineWidth: 2) }
+            }
+            .frame(height: 26)
     }
 }

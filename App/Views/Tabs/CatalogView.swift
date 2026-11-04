@@ -174,7 +174,8 @@ private extension View {
             .padding(.horizontal, 14)
             .frame(minHeight: 40)
             .background(fill, in: Capsule())
-            .boxOutline(Capsule())
+            .modifier(BoxOutline(shape: Capsule(), color: fill == Palette.paper ? Palette.outline : Palette.ink,
+                                 light: 2, dark: fill == Palette.paper ? 1.5 : 0))
     }
 }
 
@@ -429,7 +430,7 @@ struct GroupDetailView: View {
                 PatternFill(style: style).clipShape(SideBlob(start: 0.7, variant: 1))
             }
             .ignoresSafeArea(edges: .top)
-            .overlay(alignment: .bottom) { Rectangle().fill(Palette.cardOutline).frame(height: 2) }
+            .overlay(alignment: .bottom) { HeaderRule() }
         }
     }
 }
@@ -559,5 +560,13 @@ struct ExampleBox: View {
         guard let part, let range = a.range(of: part, options: .caseInsensitive) else { return a }
         a[range].font = WPFont.nunito(17, .heavy)
         return a
+    }
+}
+
+/// Line under the topic header: ink in light mode, none in dark mode.
+struct HeaderRule: View {
+    @Environment(\.colorScheme) private var scheme
+    var body: some View {
+        Rectangle().fill(Palette.ink).frame(height: scheme == .dark ? 0 : 2.5)
     }
 }

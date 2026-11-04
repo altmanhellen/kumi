@@ -33,6 +33,7 @@ enum Palette {
     /// Outline of selected items.
     static let emphasis = Color(light: 0x1E1A16, dark: 0xF1E8D6)
     static let chevron = Color(light: 0x645C52, dark: 0x6B6157)
+    static let track = Color(light: 0xFFFBF1, dark: 0x1F1B18)
     static let danger = Color(light: 0xB23A24, dark: 0xE8836E)
     static let paper = Color(light: 0xFFFBF1, dark: 0x2A2521)
     static let field = Color(light: 0xFFF8EA, dark: 0x2F2925)
@@ -136,8 +137,12 @@ struct BoxOutline<S: Shape>: ViewModifier {
 
 extension View {
     func boxOutline<S: Shape>(_ shape: S) -> some View { modifier(BoxOutline(shape: shape)) }
-    /// Outline of colored, illustrated cards: 2pt #5E554B in dark mode.
+    /// Solid colored boxes: ink outline in light mode, none in dark mode (color carries the shape).
+    func fillOutline<S: Shape>(_ shape: S) -> some View {
+        modifier(BoxOutline(shape: shape, color: Palette.ink, light: 2.5, dark: 0))
+    }
+    /// Outline of colored, illustrated cards: none in dark mode.
     func cardOutline<S: Shape>(_ shape: S) -> some View {
-        modifier(BoxOutline(shape: shape, color: Palette.cardOutline, light: 2.5, dark: 2))
+        modifier(BoxOutline(shape: shape, color: Palette.cardOutline, light: 2.5, dark: 0))
     }
 }
