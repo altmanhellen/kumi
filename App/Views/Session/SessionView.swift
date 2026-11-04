@@ -59,37 +59,52 @@ struct IntroStep: View {
                     .padding(.top, 18)
 
                     PatternCard(style: .waves, variant: 1, blobStart: 0.78) {
-                        VStack(alignment: .leading, spacing: 4) {
+                        VStack(alignment: .leading, spacing: 0) {
+                            Text("\(item.level.rawValue) · \(item.topics.first ?? item.structureSet)")
+                                .font(WPFont.nunito(14, .heavy))
+                                .foregroundStyle(Palette.inkSoft)
                             Text(item.phrase)
                                 .font(WPFont.rubik(36))
                                 .fixedSize(horizontal: false, vertical: true)
-                                .accessibilityLabel(item.phrase)
-                            Text("\(item.level.rawValue) · \(item.topics.first ?? "")").font(WPFont.nunito(15)).foregroundStyle(Palette.inkSoft)
-                            HStack(spacing: 10) {
-                                ListenPill(title: "Слушать") { model.speakEnglish(item.phrase) }
-                                SlowPill(rate: model.prefs.slowRate) { model.speakEnglish(item.phrase, slow: true) }
+                                .padding(.top, 10)
+                            Text(item.meaningEn)
+                                .font(WPFont.nunito(18, .bold))
+                                .foregroundStyle(Palette.ink)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .padding(.top, 10)
+                            if model.prefs.showTranslation {
+                                Text(item.translationRu)
+                                    .font(WPFont.nunito(16))
+                                    .foregroundStyle(Palette.inkSoft)
+                                    .fixedSize(horizontal: false, vertical: true)
+                                    .padding(.top, 4)
                             }
-                            .padding(.top, 14)
+                            Spacer(minLength: 16)
+                            HStack(spacing: 10) {
+                                Button { model.speakEnglish(item.phrase) } label: {
+                                    Image(systemName: "speaker.wave.2.fill")
+                                        .font(.system(size: 18, weight: .bold))
+                                        .foregroundStyle(Color(hex: 0xF4EDDC))
+                                        .frame(width: 48, height: 48)
+                                        .background(Circle().fill(Palette.ink))
+                                }
+                                .buttonStyle(PressStyle())
+                                .accessibilityLabel("Слушать: \(item.phrase)")
+                                SlowPill(rate: model.prefs.slowRate, height: 48) { model.speakEnglish(item.phrase, slow: true) }
+                            }
                         }
-                        .padding(.horizontal, 22).padding(.vertical, 20)
-                        .frame(width: 280, alignment: .leading)
+                        .padding(.leading, 22)
+                        .padding(.trailing, 76)
+                        .padding(.vertical, 20)
+                        .frame(minHeight: 300, alignment: .topLeading)
                     }
                     .padding(.top, 10)
-
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Значение").font(WPFont.hand(21)).foregroundStyle(Palette.muted)
-                        Text(item.meaningEn).font(WPFont.nunito(18, .bold)).foregroundStyle(Palette.text)
-                        if model.prefs.showTranslation {
-                            Text(item.translationRu).font(WPFont.nunito(16)).foregroundStyle(Palette.secondary)
-                        }
-                    }
-                    .padding(.top, 22)
 
                     if let ex = item.example {
                         ExampleBox(en: ex.en, ru: model.prefs.showTranslation ? ex.ru : nil, highlight: item.phrase) {
                             model.speakEnglish(ex.en)
                         }
-                        .padding(.top, 18)
+                        .padding(.top, 20)
                     }
                 }
                 .padding(.bottom, 12)

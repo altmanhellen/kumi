@@ -470,13 +470,14 @@ struct ListenPill: View {
 
 struct SlowPill: View {
     let rate: Double
+    var height: CGFloat = 44
     let action: () -> Void
     var body: some View {
         Button(action: action) {
             Text(String(format: "%.1f×", rate))
                 .font(WPFont.nunito(15, .heavy))
                 .foregroundStyle(Palette.ink)
-                .frame(minWidth: 64, minHeight: 44)
+                .frame(minWidth: 64, minHeight: height)
                 .background(Color(hex: 0xFFFBF1), in: Capsule())
                 .overlay(Capsule().stroke(Palette.ink, lineWidth: 2.5))
         }
