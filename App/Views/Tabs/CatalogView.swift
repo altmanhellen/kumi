@@ -114,7 +114,7 @@ struct CatalogView: View {
         .padding(.horizontal, 16)
         .frame(height: 50)
         .background(Palette.paper, in: Radii.shape(0))
-        .overlay(Radii.shape(0).stroke(Palette.outline, lineWidth: 2.5))
+        .boxOutline(Radii.shape(0))
     }
 
     private var levelPicker: some View {
@@ -139,7 +139,7 @@ struct CatalogView: View {
         }
         .background(Palette.paper)
         .clipShape(RoundedRectangle(cornerRadius: 10))
-        .overlay(RoundedRectangle(cornerRadius: 10).stroke(Palette.outline, lineWidth: 2.5))
+        .boxOutline(RoundedRectangle(cornerRadius: 10))
     }
 
     private var topicChips: some View {
@@ -174,7 +174,7 @@ private extension View {
             .padding(.horizontal, 14)
             .frame(minHeight: 40)
             .background(fill, in: Capsule())
-            .overlay(Capsule().stroke(Palette.outline, lineWidth: 2))
+            .boxOutline(Capsule())
     }
 }
 
@@ -265,11 +265,15 @@ struct GroupDetailView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
     let filter: CatalogFilter
+    /// The level filter the user came from, if any.
     let level: Level?
+    @State private var picked: Level?
     @State private var openItem: Collocation?
     @State private var overLimit = false
 
-    private var items: [Collocation] {
+    private var current: Level { picked ?? level ?? model.prefs.level }
+
+    private var inFilter: [Collocation] {
         model.library.items.filter { item in
             let inFilter: Bool
             switch filter {
@@ -277,8 +281,12 @@ struct GroupDetailView: View {
             case .topic(let t): inFilter = item.topics.contains(t)
             case .favorites: inFilter = model.isFavorite(item.id)
             }
-            return inFilter && (filter == .favorites || level == nil || item.level == level)
+            return inFilter
         }
+    }
+
+    private var items: [Collocation] {
+        filter == .favorites ? inFilter : inFilter.filter { $0.level == current }
     }
 
     private var style: PatternStyle {
@@ -355,6 +363,36 @@ struct GroupDetailView: View {
         model.startLearning(title: filter.title, ids: items.map(\.id))
     }
 
+    /// A2 / B1 / B2 / C1 inside the topic; levels without phrases here are faded and can't be tapped.
+    private var levelSwitcher: some View {
+        HStack(spacing: 0) {
+            ForEach(Array(Level.allCases.enumerated()), id: \.element) { i, l in
+                let on = l == current
+                let empty = !inFilter.contains { $0.level == l }
+                Button { picked = l } label: {
+                    Text(l.rawValue)
+                        .font(WPFont.rubik(15, false))
+                        .foregroundStyle(on ? Color(hex: 0xF4EDDC) : Palette.ink)
+                        .frame(maxWidth: .infinity, minHeight: 36)
+                        .background(on ? Palette.ink : .clear)
+                        .overlay(alignment: .leading) {
+                            if i > 0 { Rectangle().fill(Palette.ink).frame(width: 2) }
+                        }
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .disabled(empty)
+                .opacity(empty ? 0.35 : 1)
+                .accessibilityLabel("Уровень \(l.rawValue)")
+                .accessibilityAddTraits(on ? .isSelected : [])
+            }
+        }
+        .frame(width: 196)
+        .background(Color(hex: 0xFFFBF1))
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .overlay(RoundedRectangle(cornerRadius: 10).stroke(Palette.ink, lineWidth: 2.5))
+    }
+
     private func header(counts: [LearningState: Int], total: Int) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             Button { dismiss() } label: {
@@ -368,9 +406,16 @@ struct GroupDetailView: View {
             .padding(.leading, -6)
             VStack(alignment: .leading, spacing: 4) {
                 Text(filter.title).font(WPFont.rubik(filter.title.count > 14 ? 30 : 44)).lineLimit(2).minimumScaleFactor(0.7)
-                Text("\(level.map { $0.rawValue + " · " } ?? "")\(total) \(Plural.expressions(total))")
-                    .font(WPFont.nunito(15, .bold)).foregroundStyle(Color(hex: 0x2F2A24))
-                StateBar(counts: counts, total: total).frame(width: 190).padding(.top, 8)
+                if filter == .favorites {
+                    Text("\(total) \(Plural.expressions(total))")
+                        .font(WPFont.nunito(15, .bold)).foregroundStyle(Color(hex: 0x2F2A24))
+                } else {
+                    levelSwitcher.padding(.top, 6)
+                    Text("\(total) \(Plural.expressions(total)) уровня \(current.rawValue)")
+                        .font(WPFont.nunito(15, .bold)).foregroundStyle(Color(hex: 0x2F2A24))
+                        .padding(.top, 4)
+                }
+                StateBar(counts: counts, total: total).frame(width: 196).padding(.top, 8)
             }
             .frame(width: 240, alignment: .leading)
         }
@@ -384,7 +429,7 @@ struct GroupDetailView: View {
                 PatternFill(style: style).clipShape(SideBlob(start: 0.7, variant: 1))
             }
             .ignoresSafeArea(edges: .top)
-            .overlay(alignment: .bottom) { Rectangle().fill(Palette.outline).frame(height: 2.5) }
+            .overlay(alignment: .bottom) { Rectangle().fill(Palette.cardOutline).frame(height: 2) }
         }
     }
 }
@@ -506,7 +551,7 @@ struct ExampleBox: View {
         }
         .padding(.horizontal, 16).padding(.vertical, 14)
         .background(Palette.paper, in: Radii.shape(1))
-        .overlay(Radii.shape(1).stroke(Palette.outline, lineWidth: 2.5))
+        .boxOutline(Radii.shape(1))
     }
 
     static func bolded(_ text: String, _ part: String?) -> AttributedString {

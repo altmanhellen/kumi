@@ -119,7 +119,7 @@ struct ProduceStep: View {
             }
             .clipShape(WobblyRect(variant: 2))
         }
-        .overlay(WobblyRect(variant: 2).stroke(Palette.outline, lineWidth: 2.5))
+        .cardOutline(WobblyRect(variant: 2))
     }
 
     @ViewBuilder
@@ -148,7 +148,7 @@ struct ProduceStep: View {
                     .padding(.horizontal, 14)
                     .frame(minHeight: 44)
                     .background(Palette.paper, in: Capsule())
-                    .overlay(Capsule().stroke(Palette.outline, lineWidth: 2.5))
+                    .boxOutline(Capsule())
             }
             .buttonStyle(PressStyle())
             .padding(.top, 12)

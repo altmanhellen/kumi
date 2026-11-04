@@ -24,13 +24,19 @@ extension Color {
 enum Palette {
     static let background = Color(light: 0xF4EDDC, dark: 0x1F1B18)
     static let text = Color(light: 0x1E1A16, dark: 0xF1E8D6)
-    static let muted = Color(light: 0x645C52, dark: 0xBDB2A0)
-    static let secondary = Color(light: 0x3D3730, dark: 0xD8CDB9)
-    static let outline = Color(light: 0x1E1A16, dark: 0xEDE3CF)
+    static let muted = Color(light: 0x645C52, dark: 0xA89D8C)
+    static let secondary = Color(light: 0x3D3730, dark: 0xA89D8C)
+    /// Box and list outlines. Quiet in dark mode, where bright cream is kept for emphasis.
+    static let outline = Color(light: 0x1E1A16, dark: 0x4A423A)
+    /// Outline of illustrated cards and the progress bar.
+    static let cardOutline = Color(light: 0x1E1A16, dark: 0x5E554B)
+    /// Outline of selected items.
+    static let emphasis = Color(light: 0x1E1A16, dark: 0xF1E8D6)
+    static let chevron = Color(light: 0x645C52, dark: 0x6B6157)
     static let paper = Color(light: 0xFFFBF1, dark: 0x2A2521)
     static let field = Color(light: 0xFFF8EA, dark: 0x2F2925)
-    static let divider = Color(light: 0xCFC4AE, dark: 0x4A423B)
-    static let navBorder = Color(light: 0x1E1A16, dark: 0x5A5148)
+    static let divider = Color(light: 0xCFC4AE, dark: 0x3A332D)
+    static let navBorder = Color(light: 0x1E1A16, dark: 0x3A332D)
     static let primaryFill = Color(light: 0x1E1A16, dark: 0xF1E8D6)
     static let primaryText = Color(light: 0xF4EDDC, dark: 0x1E1A16)
     static let disabled = Color(light: 0x918A7F, dark: 0x6E665C)
@@ -76,12 +82,13 @@ enum WPFont {
         return .custom(name, size: size, relativeTo: style)
     }
 
-    /// Caveat letters (like the hook of «г») reach past their advance width, so hand-written labels
-    /// get a little trailing room to keep the last glyph from being cut.
-    static func handText(_ text: String) -> String { text + "\u{2009}" }
+    static func handText(_ text: String) -> String { text }
 
+    /// Neucha, regular weight only. It runs larger than the Caveat sizes the designs were drawn with,
+    /// so those sizes are scaled down.
     static func hand(_ size: CGFloat) -> Font {
-        .custom("CaveatRoman-Bold", size: size, relativeTo: .headline)
+        let scaled: [CGFloat: CGFloat] = [24: 20, 23: 19, 22: 18, 21: 18, 19: 16]
+        return .custom("Neucha", size: scaled[size] ?? (size * 0.85).rounded(), relativeTo: .headline)
     }
 }
 
@@ -94,5 +101,42 @@ enum Radii {
     static func shape(_ i: Int) -> UnevenRoundedRectangle {
         let r = sets[abs(i) % sets.count]
         return UnevenRoundedRectangle(topLeadingRadius: r.0, bottomLeadingRadius: r.3, bottomTrailingRadius: r.2, topTrailingRadius: r.1)
+    }
+}
+
+extension View {
+    /// Thinner outlines in dark mode so the content, not the frames, carries the contrast.
+    func outlineWidth(light: CGFloat, dark: CGFloat, _ body: @escaping (CGFloat) -> some View) -> some View {
+        modifier(OutlineWidthReader(light: light, dark: dark, make: { AnyView(body($0)) }))
+    }
+}
+
+struct OutlineWidthReader: ViewModifier {
+    @Environment(\.colorScheme) private var scheme
+    let light: CGFloat
+    let dark: CGFloat
+    let make: (CGFloat) -> AnyView
+    func body(content: Content) -> some View {
+        content.overlay(make(scheme == .dark ? dark : light))
+    }
+}
+
+/// Quiet outline for paper boxes: 2.5pt ink in light mode, 1.5pt muted in dark mode.
+struct BoxOutline<S: Shape>: ViewModifier {
+    @Environment(\.colorScheme) private var scheme
+    let shape: S
+    var color: Color = Palette.outline
+    var light: CGFloat = 2.5
+    var dark: CGFloat = 1.5
+    func body(content: Content) -> some View {
+        content.overlay(shape.stroke(color, lineWidth: scheme == .dark ? dark : light))
+    }
+}
+
+extension View {
+    func boxOutline<S: Shape>(_ shape: S) -> some View { modifier(BoxOutline(shape: shape)) }
+    /// Outline of colored, illustrated cards: 2pt #5E554B in dark mode.
+    func cardOutline<S: Shape>(_ shape: S) -> some View {
+        modifier(BoxOutline(shape: shape, color: Palette.cardOutline, light: 2.5, dark: 2))
     }
 }

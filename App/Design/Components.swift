@@ -2,6 +2,7 @@ import SwiftUI
 
 /// Card with a light base, a patterned blob on the right and a hand-drawn outline.
 struct PatternCard<Content: View>: View {
+    @Environment(\.colorScheme) private var scheme
     var style: PatternStyle
     var variant = 0
     var blobStart: CGFloat = 0.7
@@ -25,7 +26,7 @@ struct PatternCard<Content: View>: View {
                 .accessibilityHidden(true)
             }
             .overlay {
-                WobblyRect(variant: variant).stroke(Palette.outline, style: StrokeStyle(lineWidth: 2.5, lineJoin: .round))
+                WobblyRect(variant: variant).stroke(Palette.cardOutline, style: StrokeStyle(lineWidth: scheme == .dark ? 2 : 2.5, lineJoin: .round))
             }
             .foregroundStyle(Palette.ink)
     }
@@ -122,13 +123,14 @@ struct ScreenTitle: View {
 
 /// Bordered box used for settings groups and lists.
 struct PaperBox<Content: View>: View {
+    @Environment(\.colorScheme) private var scheme
     var variant = 0
     @ViewBuilder var content: Content
 
     var body: some View {
         VStack(spacing: 0) { content }
             .background(Palette.paper, in: Radii.shape(variant))
-            .overlay(Radii.shape(variant).stroke(Palette.outline, lineWidth: 2.5))
+            .overlay(Radii.shape(variant).stroke(Palette.outline, lineWidth: scheme == .dark ? 1.5 : 2.5))
     }
 }
 
@@ -137,7 +139,7 @@ struct DashedDivider: View {
         Rectangle()
             .fill(.clear)
             .frame(height: 1)
-            .overlay(Line().stroke(Palette.outline.opacity(0.3), style: StrokeStyle(lineWidth: 2, dash: [6, 5])))
+            .overlay(Line().stroke(Palette.divider, style: StrokeStyle(lineWidth: 2, dash: [6, 5])))
             .padding(.horizontal, 14)
     }
 
@@ -161,7 +163,7 @@ struct WPToggleStyle: ToggleStyle {
                 Capsule()
                     .fill(configuration.isOn ? Palette.blue : Palette.switchOff)
                     .frame(width: 52, height: 32)
-                    .overlay(Capsule().stroke(Palette.outline, lineWidth: 2.5))
+                    .boxOutline(Capsule())
                     .overlay(alignment: configuration.isOn ? .trailing : .leading) {
                         Circle()
                             .fill(Color(hex: 0xFFFBF1))
@@ -193,7 +195,7 @@ struct SettingsRow: View {
             }
             Spacer(minLength: 8)
             if let value { Text(value).font(WPFont.nunito(15)).foregroundStyle(Palette.secondary).multilineTextAlignment(.trailing) }
-            if chevron { Image(systemName: "chevron.right").font(.system(size: 14, weight: .bold)).foregroundStyle(Palette.muted) }
+            if chevron { Image(systemName: "chevron.right").font(.system(size: 14, weight: .bold)).foregroundStyle(Palette.chevron) }
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 6)
@@ -274,7 +276,7 @@ struct SessionProgressBar: View {
         .frame(height: 14)
         .background(Color(hex: 0xFFFBF1))
         .clipShape(RoundedRectangle(cornerRadius: 9))
-        .overlay(RoundedRectangle(cornerRadius: 9).stroke(Palette.outline, lineWidth: 2.5))
+        .overlay(RoundedRectangle(cornerRadius: 9).stroke(Palette.cardOutline, lineWidth: 2))
     }
 }
 

@@ -15,17 +15,6 @@ struct ProgressScreen: View {
                             ScreenTitle(text: "Что вы помните")
                         }
                         Spacer()
-                        NavigationLink {
-                            SettingsView()
-                        } label: {
-                            Image(systemName: "gearshape")
-                                .font(.system(size: 19, weight: .semibold))
-                                .foregroundStyle(Palette.text)
-                                .frame(width: 44, height: 44)
-                                .background(Circle().fill(Palette.paper))
-                                .overlay(Circle().stroke(Palette.outline, lineWidth: 2.5))
-                        }
-                        .accessibilityLabel("Профиль и настройки")
                     }
                     statesBox
                     dueBox
@@ -38,10 +27,6 @@ struct ProgressScreen: View {
             }
             .screenBackground()
             .toolbar(.hidden, for: .navigationBar)
-            .navigationDestination(for: String.self) { _ in SettingsView() }
-            #if DEBUG
-            .onAppear { if ProcessInfo.processInfo.arguments.contains("-wpSettings") { path.append("settings") } }
-            #endif
         }
     }
 
@@ -64,7 +49,7 @@ struct ProgressScreen: View {
         .foregroundStyle(Palette.text)
         .padding(16)
         .background(Palette.paper, in: Radii.shape(0))
-        .overlay(Radii.shape(0).stroke(Palette.outline, lineWidth: 2.5))
+        .boxOutline(Radii.shape(0))
     }
 
     private func stateRow(_ s: LearningState, _ counts: [LearningState: Int], _ note: String?) -> some View {
@@ -95,7 +80,7 @@ struct ProgressScreen: View {
         .foregroundStyle(Palette.ink)
         .padding(.horizontal, 16).padding(.vertical, 12)
         .background(Palette.yellow, in: Radii.shape(2))
-        .overlay(Radii.shape(2).stroke(Palette.outline, lineWidth: 2.5))
+        .cardOutline(Radii.shape(2))
         .accessibilityElement(children: .combine)
     }
 
@@ -151,7 +136,7 @@ struct ProgressScreen: View {
         .foregroundStyle(Palette.ink)
         .padding(.horizontal, 16).padding(.vertical, 12)
         .background(Palette.teal, in: Radii.shape(1))
-        .overlay(Radii.shape(1).stroke(Palette.outline, lineWidth: 2.5))
+        .cardOutline(Radii.shape(1))
         .accessibilityElement(children: .combine)
     }
 }

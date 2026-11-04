@@ -129,8 +129,8 @@ struct LevelScreen: View {
                             .padding(.horizontal, 16).padding(.vertical, 10)
                             .frame(minHeight: 72)
                             .background(on ? Palette.teal : Palette.paper, in: Radii.shape(i))
-                            .overlay(Radii.shape(i).stroke(Palette.outline, lineWidth: 2.5))
-                            .background(Radii.shape(i).fill(Palette.outline).offset(x: on ? 3 : 0, y: on ? 3 : 0))
+                            .overlay(Radii.shape(i).stroke(on ? Palette.emphasis : Palette.outline, lineWidth: on ? 2.5 : 1.5))
+                            .background(Radii.shape(i).fill(Palette.emphasis).offset(x: on ? 3 : 0, y: on ? 3 : 0).opacity(on ? 1 : 0))
                         }
                         .buttonStyle(PressStyle())
                         .accessibilityAddTraits(on ? .isSelected : [])
@@ -257,8 +257,8 @@ struct TopicGrid: View {
                     .padding(14)
                     .frame(maxWidth: .infinity, minHeight: 116, alignment: .topLeading)
                     .background(on ? PatternStyle.of(i).soft : Palette.paper, in: Radii.shape(i))
-                    .overlay(Radii.shape(i).stroke(Palette.outline, lineWidth: 2.5))
-                    .background(Radii.shape(i).fill(Palette.outline).offset(x: on ? 3 : 0, y: on ? 3 : 0))
+                    .overlay(Radii.shape(i).stroke(on ? Palette.emphasis : Palette.outline, lineWidth: on ? 2.5 : 1.5))
+                    .background(Radii.shape(i).fill(Palette.emphasis).offset(x: on ? 3 : 0, y: on ? 3 : 0).opacity(on ? 1 : 0))
                 }
                 .buttonStyle(PressStyle())
                 .accessibilityAddTraits(on ? .isSelected : [])
@@ -346,7 +346,7 @@ struct PrefsScreen: View {
                     Button { path.append(.voices) } label: {
                         HStack(spacing: 4) {
                             Text("Все голоса на iPhone · \(Speech.voices(language: "en").count)").font(WPFont.nunito(15, .heavy)).underline()
-                            Image(systemName: "chevron.right").font(.system(size: 13, weight: .bold))
+                            Image(systemName: "chevron.right").font(.system(size: 13, weight: .bold)).foregroundStyle(Palette.chevron)
                         }
                         .foregroundStyle(Palette.text)
                         .frame(minHeight: 44)
@@ -375,7 +375,7 @@ struct PrefsScreen: View {
                 HStack(spacing: 12) {
                     RadioDot(on: on)
                     VStack(alignment: .leading, spacing: 0) {
-                        Text(v.name).font(WPFont.nunito(16, .heavy))
+                        VoiceName(voice: v, prefix: "en")
                         Text(accent == .british ? "Великобритания" : "США").font(WPFont.nunito(14)).foregroundStyle(on ? Palette.inkSoft : Palette.muted)
                     }
                     Spacer()
@@ -393,8 +393,8 @@ struct PrefsScreen: View {
             .padding(.trailing, 6)
         }
         .background(on ? Palette.teal : Palette.paper, in: Radii.shape(i + 1))
-        .overlay(Radii.shape(i + 1).stroke(Palette.outline, lineWidth: 2.5))
-        .background(Radii.shape(i + 1).fill(Palette.outline).offset(x: on ? 3 : 0, y: on ? 3 : 0))
+        .overlay(Radii.shape(i + 1).stroke(on ? Palette.emphasis : Palette.outline, lineWidth: on ? 2.5 : 1.5))
+        .background(Radii.shape(i + 1).fill(Palette.emphasis).offset(x: on ? 3 : 0, y: on ? 3 : 0).opacity(on ? 1 : 0))
     }
 
     /// First session: 3 new expressions from the first chosen topic.

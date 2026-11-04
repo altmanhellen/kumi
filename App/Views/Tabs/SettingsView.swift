@@ -14,17 +14,11 @@ struct SettingsView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                Button { dismiss() } label: {
-                    HStack(spacing: 2) {
-                        Image(systemName: "chevron.left").font(.system(size: 17, weight: .bold))
-                        Text("Прогресс").font(WPFont.nunito(16, .heavy))
-                    }
-                    .foregroundStyle(Palette.text)
-                    .frame(minHeight: 44)
+                VStack(alignment: .leading, spacing: 2) {
+                    Eyebrow(text: "Настройки")
+                    ScreenTitle(text: "Как вам удобно")
                 }
-                .padding(.leading, -6)
-                ScreenTitle(text: "Настройки").padding(.top, 18)
-
+                .padding(.top, 10)
                 section("Озвучка")
                 PaperBox(variant: 0) {
                     NavigationLink { VoicePicker(language: .english) } label: {
@@ -315,7 +309,7 @@ struct VoicePicker: View {
                 HStack(spacing: 12) {
                     RadioDot(on: on)
                     VStack(alignment: .leading, spacing: 0) {
-                        Text(v.name).font(WPFont.nunito(16, .heavy))
+                        VoiceName(voice: v, prefix: language.prefix)
                         Text(v.regionTitle).font(WPFont.nunito(13)).foregroundStyle(on ? Palette.inkSoft : Palette.muted)
                     }
                     Spacer()
@@ -363,5 +357,18 @@ struct TopicsSettings: View {
         }
         .screenBackground()
         .toolbar(.hidden, for: .navigationBar)
+    }
+}
+
+/// Voice name, with «(системный)» after the system default voice for the language.
+struct VoiceName: View {
+    let voice: VoiceInfo
+    let prefix: String
+
+    var body: some View {
+        (Text(voice.name).font(WPFont.nunito(16, .heavy))
+         + Text(voice.id == Speech.systemVoiceId(language: prefix) ? " (системный)" : "")
+            .font(WPFont.nunito(16, .semibold))
+            .foregroundColor(Color(hex: 0x645C52)))
     }
 }

@@ -22,7 +22,7 @@ struct WordPartnersApp: App {
     }
 }
 
-enum MainTab: Hashable { case today, catalog, progress }
+enum MainTab: Hashable { case today, catalog, progress, settings }
 
 struct RootView: View {
     @Environment(AppModel.self) private var model
@@ -66,6 +66,9 @@ struct MainTabs: View {
             ProgressScreen()
                 .toolbar(.hidden, for: .tabBar)
                 .tag(MainTab.progress)
+            NavigationStack { SettingsView() }
+                .toolbar(.hidden, for: .tabBar)
+                .tag(MainTab.settings)
         }
         TabBar(tab: $tab)
         }
@@ -75,6 +78,7 @@ struct MainTabs: View {
 
 /// Bottom bar from the designs: flat, a line on top, icons with labels.
 struct TabBar: View {
+    @Environment(\.colorScheme) private var scheme
     @Binding var tab: MainTab
     @Environment(AppModel.self) private var model
 
@@ -83,11 +87,12 @@ struct TabBar: View {
             item(.today, "Сегодня", "calendar", Palette.teal)
             item(.catalog, "Каталог", "rectangle.stack", Palette.peach)
             item(.progress, "Прогресс", "chart.bar", Palette.lilac)
+            item(.settings, "Настройки", "gearshape", Palette.yellow)
         }
         .padding(.horizontal, 16)
         .padding(.top, 7)
         .background(Palette.background.ignoresSafeArea(edges: .bottom))
-        .overlay(alignment: .top) { Rectangle().fill(Palette.navBorder).frame(height: 1.5) }
+        .overlay(alignment: .top) { Rectangle().fill(Palette.navBorder).frame(height: scheme == .dark ? 1 : 1.5) }
     }
 
     private func item(_ t: MainTab, _ title: String, _ icon: String, _ fill: Color) -> some View {

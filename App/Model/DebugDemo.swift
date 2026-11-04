@@ -46,7 +46,7 @@ extension AppModel {
     static var debugTab: MainTab? {
         let args = ProcessInfo.processInfo.arguments
         guard let i = args.firstIndex(of: "-wpTab"), i + 1 < args.count else { return nil }
-        return ["catalog": .catalog, "progress": .progress][args[i + 1]]
+        return ["catalog": .catalog, "progress": .progress, "settings": .settings][args[i + 1]]
     }
 }
 #endif

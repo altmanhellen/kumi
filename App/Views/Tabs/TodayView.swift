@@ -18,7 +18,7 @@ struct TodayView: View {
             VStack(alignment: .leading, spacing: 16) {
                 VStack(alignment: .leading, spacing: 2) {
                     Eyebrow(text: dateLine)
-                    ScreenTitle(text: plan.isEmpty ? "На сегодня всё" : "\(plan.total) \(Plural.cards(plan.total)) на сегодня")
+                    ScreenTitle(text: plan.isEmpty ? "Вы молодец!" : "\(plan.total) \(Plural.cards(plan.total)) на сегодня")
                 }
 
                 if let resume = model.session {
@@ -32,7 +32,7 @@ struct TodayView: View {
                     Button { showWhy.toggle() } label: {
                         HStack(alignment: .top, spacing: 8) {
                             Image(systemName: "info.circle").font(.system(size: 16, weight: .semibold)).padding(.top, 1)
-                            Text("\(plan.newReason) Около \(model.estimateMinutes(reviews: plan.reviews.count, news: plan.news.count)) \(Plural.minutes(model.estimateMinutes(reviews: plan.reviews.count, news: plan.news.count))).")
+                            Text("Рекомендуется не больше 10 новых фраз в день.")
                                 .multilineTextAlignment(.leading)
                         }
                         .font(WPFont.nunito(14))
@@ -145,7 +145,7 @@ struct TodayView: View {
             .foregroundStyle(Palette.ink)
             .padding(14)
             .background(Palette.yellow, in: Radii.shape(1))
-            .overlay(Radii.shape(1).stroke(Palette.outline, lineWidth: 2.5))
+            .cardOutline(Radii.shape(1))
         }
         .buttonStyle(PressStyle())
     }

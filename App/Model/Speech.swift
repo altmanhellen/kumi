@@ -49,6 +49,13 @@ final class Speech: NSObject, AVSpeechSynthesizerDelegate {
             .sorted { ($0.language, -$0.quality.rawValue, $0.name) < ($1.language, -$1.quality.rawValue, $1.name) }
     }
 
+    /// The system's default voice for a language ("en" or "ru"), marked «(системный)» in voice lists.
+    static func systemVoiceId(language prefix: String) -> String? {
+        let current = AVSpeechSynthesisVoice.currentLanguageCode()
+        let code = current.hasPrefix(prefix) ? current : (prefix == "en" ? "en-US" : "ru-RU")
+        return AVSpeechSynthesisVoice(language: code)?.identifier
+    }
+
     /// The chosen voice if it is still installed, otherwise the system default for the accent or language.
     static func voice(id: String?, fallbackLanguage: String) -> AVSpeechSynthesisVoice? {
         if let id, let v = AVSpeechSynthesisVoice(identifier: id) { return v }

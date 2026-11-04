@@ -120,6 +120,7 @@ struct IntroStep: View {
 
 /// Plain answer row: dashed circle and phrase; after checking it turns green or red with a pattern band.
 struct OptionTile: View {
+    @Environment(\.colorScheme) private var scheme
     let text: String
     var style: PatternStyle = .waves
     var selected = false
@@ -135,7 +136,7 @@ struct OptionTile: View {
         switch state {
         case .right: Color(hex: 0xD3EBD9)
         case .wrong: Color(hex: 0xF8D5CC)
-        case .idle: selected ? Color(hex: 0xFFF1BF) : Color(hex: 0xFFFBF1)
+        case .idle: selected ? Color(hex: 0xFFF1BF) : Palette.paper
         }
     }
 
@@ -150,13 +151,13 @@ struct OptionTile: View {
                         .font(WPFont.rubik(19, false))
                         .multilineTextAlignment(.leading)
                     if let note {
-                        Text(note).font(WPFont.nunito(14)).foregroundStyle(Palette.inkSoft)
+                        Text(note).font(WPFont.nunito(14)).foregroundStyle(state == .idle ? Palette.muted : Palette.inkSoft)
                             .multilineTextAlignment(.leading)
                     }
                 }
                 Spacer(minLength: 0)
             }
-            .foregroundStyle(Palette.ink)
+            .foregroundStyle(state == .idle && !selected ? Palette.text : Palette.ink)
             .padding(.leading, 14)
             .padding(.trailing, state == .idle ? 14 : 92)
             .padding(.vertical, 10)
@@ -174,8 +175,9 @@ struct OptionTile: View {
                 }
                 .clipShape(Radii.shape(1))
             }
-            .overlay(Radii.shape(1).stroke(Palette.ink, lineWidth: raised ? 3 : 2.5))
-            .background(Radii.shape(1).fill(Palette.ink).offset(x: raised ? 3 : 0, y: raised ? 3 : 0))
+            .overlay(Radii.shape(1).stroke(raised ? Palette.emphasis : Palette.outline,
+                                           lineWidth: raised ? (scheme == .dark ? 2.5 : 3) : (scheme == .dark ? 1.5 : 2.5)))
+            .background(Radii.shape(1).fill(Palette.emphasis).offset(x: raised ? 3 : 0, y: raised ? 3 : 0).opacity(raised ? 1 : 0))
             .opacity(dimmed ? 0.5 : 1)
             .animation(.easeOut(duration: 0.15), value: selected)
         }
@@ -229,7 +231,7 @@ struct OptionTile: View {
                     .overlay(Circle().fill(Palette.ink).frame(width: 12, height: 12))
                     .frame(width: 26, height: 26)
             } else {
-                Circle().stroke(Color(hex: 0x8A8073), style: StrokeStyle(lineWidth: 2, dash: [4, 3]))
+                Circle().stroke(Color(light: 0x8A8073, dark: 0x6B6157), style: StrokeStyle(lineWidth: 2, dash: [4, 3]))
                     .frame(width: 26, height: 26)
             }
         }
@@ -441,7 +443,7 @@ struct FeedbackCard<Extra: View>: View {
             }
             .clipShape(WobblyRect(variant: 3))
         }
-        .overlay(WobblyRect(variant: 3).stroke(Palette.outline, lineWidth: 2.5))
+        .cardOutline(WobblyRect(variant: 3))
         .accessibilityElement(children: .contain)
     }
 }
