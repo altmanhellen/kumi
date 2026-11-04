@@ -61,7 +61,7 @@ enum Palette {
     static func stateColor(_ s: LearningState) -> Color {
         switch s {
         case .mastered: green
-        case .reviewing: blue
+        case .reviewing: Color(hex: 0x7FA7F0)
         case .learning: orange
         case .new: paper
         }
