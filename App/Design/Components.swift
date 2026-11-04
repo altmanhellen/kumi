@@ -253,7 +253,7 @@ struct StatePill: View {
         let dark = scheme == .dark
         Text(state.title)
             .font(WPFont.nunito(12, .heavy))
-            .foregroundStyle(state == .mastered || state == .reviewing ? .white : (state == .new ? Palette.text : Palette.ink))
+            .foregroundStyle(state == .reviewing ? .white : (state == .new ? Palette.text : Palette.ink))
             .padding(.horizontal, 10)
             .padding(.vertical, 3)
             .background(state == .new ? Color.clear : Palette.stateColor(state), in: Capsule())

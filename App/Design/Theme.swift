@@ -56,7 +56,7 @@ enum Palette {
     static let lilac = Color(hex: 0xD6C9F6)
     static let orange = Color(hex: 0xEE8A52)
     static let blush = Color(hex: 0xFADCC8)
-    static let green = Color(hex: 0x2F7D4F)
+    static let green = Color(hex: 0x5DBB6D)
 
     static func stateColor(_ s: LearningState) -> Color {
         switch s {
