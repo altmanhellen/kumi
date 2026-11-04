@@ -118,12 +118,11 @@ struct IntroStep: View {
     }
 }
 
-/// Colored option card with a selection circle on the right.
+/// Plain answer row: dashed circle and phrase; after checking it turns green or red with a pattern band.
 struct OptionTile: View {
     let text: String
-    let style: PatternStyle
+    var style: PatternStyle = .waves
     var selected = false
-    /// Another card is selected, so this one steps back.
     var dimmed = false
     var state: OptionState = .idle
     /// Translation shown under the phrase once the answer is checked.
@@ -132,87 +131,108 @@ struct OptionTile: View {
 
     enum OptionState { case idle, right, wrong }
 
-    private var lifted: Bool { selected || state == .right }
+    private var fill: Color {
+        switch state {
+        case .right: Color(hex: 0xD3EBD9)
+        case .wrong: Color(hex: 0xF8D5CC)
+        case .idle: selected ? Color(hex: 0xFFF1BF) : Color(hex: 0xFFFBF1)
+        }
+    }
+
+    private var raised: Bool { selected || state != .idle }
 
     var body: some View {
         Button(action: action) {
             HStack(spacing: 12) {
-                VStack(alignment: .leading, spacing: 5) {
+                circle
+                VStack(alignment: .leading, spacing: 2) {
                     Text(text)
-                        .font(WPFont.rubik(20, false))
-                        .foregroundStyle(Palette.ink)
+                        .font(WPFont.rubik(19, false))
                         .multilineTextAlignment(.leading)
-                        .padding(.horizontal, 14).padding(.vertical, 6)
-                        .background(Palette.cream.opacity(0.92), in: RoundedRectangle(cornerRadius: 8))
                     if let note {
-                        Text(note)
-                            .font(WPFont.nunito(13, .bold))
-                            .foregroundStyle(Palette.ink)
+                        Text(note).font(WPFont.nunito(14)).foregroundStyle(Palette.inkSoft)
                             .multilineTextAlignment(.leading)
-                            .padding(.horizontal, 10).padding(.vertical, 3)
-                            .background(Palette.cream, in: RoundedRectangle(cornerRadius: 6))
                     }
                 }
-                .padding(.leading, 18)
-                .padding(.vertical, note == nil ? 12 : 8)
-                Spacer(minLength: 8)
-                circle.padding(.trailing, 16)
+                Spacer(minLength: 0)
             }
-            .frame(maxWidth: .infinity, minHeight: 76)
+            .foregroundStyle(Palette.ink)
+            .padding(.leading, 14)
+            .padding(.trailing, state == .idle ? 14 : 92)
+            .padding(.vertical, 10)
+            .frame(maxWidth: .infinity, minHeight: 64, alignment: .leading)
             .background {
-                ZStack {
-                    style.fill
-                    PatternFill(style: style).opacity(0.55).mask(
-                        LinearGradient(colors: [.clear, .black], startPoint: .leading, endPoint: .trailing)
-                    )
+                ZStack(alignment: .trailing) {
+                    fill
+                    if state != .idle {
+                        PatternFill(style: state == .right ? .waves : .hatch)
+                            .colorMultiply(.white)
+                            .overlay(band)
+                            .frame(width: 84)
+                            .clipShape(SideBlob(start: 0.12, variant: 1))
+                    }
                 }
-                .opacity(state == .wrong ? 0.4 : 1)
-                .background(Palette.background)
-                .clipShape(Radii.shape(style.rawValue))
+                .clipShape(Radii.shape(1))
             }
-            .overlay(Radii.shape(style.rawValue).stroke(Palette.outline, lineWidth: 2.5))
-            .background(Radii.shape(style.rawValue).fill(Palette.outline).offset(x: lifted ? 5 : 0, y: lifted ? 5 : 0))
-            .offset(x: lifted ? -3 : 0, y: lifted ? -3 : 0)
+            .overlay(Radii.shape(1).stroke(Palette.ink, lineWidth: raised ? 3 : 2.5))
+            .background(Radii.shape(1).fill(Palette.ink).offset(x: raised ? 3 : 0, y: raised ? 3 : 0))
             .opacity(dimmed ? 0.5 : 1)
             .animation(.easeOut(duration: 0.15), value: selected)
         }
         .buttonStyle(.plain)
-        .accessibilityAddTraits(lifted ? .isSelected : [])
+        .accessibilityAddTraits(selected || state == .right ? .isSelected : [])
         .accessibilityValue(state == .right ? "верно" : state == .wrong ? "неверно" : "")
     }
 
-    private var circle: some View {
-        let filled = lifted
-        return Circle()
-            .fill(filled ? Palette.ink : Color(hex: 0xFFFBF1))
-            .overlay(Circle().stroke(Palette.ink, lineWidth: 2.5))
-            .overlay {
-                if filled {
-                    Image(systemName: "checkmark").font(.system(size: 14, weight: .black)).foregroundStyle(Color(hex: 0xFFFBF1))
+    /// Green waves or red cross-hatch on the right edge.
+    private var band: some View {
+        Canvas { ctx, size in
+            let good = state == .right
+            ctx.fill(Path(CGRect(origin: .zero, size: size)), with: .color(good ? Color(hex: 0xA6D5B4) : Color(hex: 0xF0A08C)))
+            let ink = good ? Color(hex: 0x2F7D4F) : Color(hex: 0xC8452F)
+            if good {
+                var y: CGFloat = 12
+                while y < size.height + 8 {
+                    var p = Path(); var x: CGFloat = -6
+                    p.move(to: CGPoint(x: x, y: y))
+                    while x < size.width + 12 { p.addQuadCurve(to: CGPoint(x: x + 14, y: y), control: CGPoint(x: x + 7, y: y - 7)); x += 14 }
+                    ctx.stroke(p, with: .color(ink), style: StrokeStyle(lineWidth: 3.5, lineCap: .round))
+                    y += 18
                 }
+            } else {
+                var p = Path(); var x: CGFloat = -size.height
+                while x < size.width + size.height {
+                    p.move(to: CGPoint(x: x, y: size.height)); p.addLine(to: CGPoint(x: x + size.height * 0.5, y: 0))
+                    p.move(to: CGPoint(x: x, y: 0)); p.addLine(to: CGPoint(x: x + size.height * 0.5, y: size.height))
+                    x += 22
+                }
+                ctx.stroke(p, with: .color(ink), lineWidth: 2.5)
             }
-            .frame(width: 32, height: 32)
-            .opacity(state == .wrong ? 0.5 : 1)
-            .accessibilityHidden(true)
-    }
-}
-
-/// Bottom sheet with a wavy top edge.
-struct WavyTop: Shape {
-    func path(in r: CGRect) -> Path {
-        var p = Path()
-        let amp: CGFloat = 7, wave: CGFloat = 46
-        p.move(to: CGPoint(x: r.minX, y: r.minY + amp))
-        var x = r.minX
-        while x < r.maxX {
-            p.addQuadCurve(to: CGPoint(x: min(x + wave, r.maxX), y: r.minY + amp),
-                           control: CGPoint(x: x + wave / 2, y: r.minY - amp))
-            x += wave
         }
-        p.addLine(to: CGPoint(x: r.maxX, y: r.maxY))
-        p.addLine(to: CGPoint(x: r.minX, y: r.maxY))
-        p.closeSubpath()
-        return p
+    }
+
+    @ViewBuilder
+    private var circle: some View {
+        switch state {
+        case .right:
+            Image(systemName: "checkmark").font(.system(size: 12, weight: .black)).foregroundStyle(.white)
+                .frame(width: 26, height: 26).background(Circle().fill(Color(hex: 0x2F7D4F)))
+                .overlay(Circle().stroke(Palette.ink, lineWidth: 2))
+        case .wrong:
+            Image(systemName: "xmark").font(.system(size: 12, weight: .black)).foregroundStyle(.white)
+                .frame(width: 26, height: 26).background(Circle().fill(Color(hex: 0xC8452F)))
+                .overlay(Circle().stroke(Palette.ink, lineWidth: 2))
+        case .idle:
+            if selected {
+                Circle().fill(Color(hex: 0xFFF1BF))
+                    .overlay(Circle().stroke(Palette.ink, lineWidth: 2.5))
+                    .overlay(Circle().fill(Palette.ink).frame(width: 12, height: 12))
+                    .frame(width: 26, height: 26)
+            } else {
+                Circle().stroke(Color(hex: 0x8A8073), style: StrokeStyle(lineWidth: 2, dash: [4, 3]))
+                    .frame(width: 26, height: 26)
+            }
+        }
     }
 }
 
@@ -225,16 +245,57 @@ struct RecognizeStep: View {
     @State private var checked = false
     @State private var correct = false
 
-    private var question: String {
-        model.prefs.showTranslation ? item.recognition.promptRu : "Which expression means “\(item.meaningEn)”?"
+    /// Question as a heading, with the quoted meaning under a yellow highlighter.
+    private var question: AttributedString {
+        let raw = model.prefs.showTranslation ? item.recognition.promptRu : "Which expression means “\(item.meaningEn)”?"
+        var a = AttributedString(raw)
+        let pairs: [(String, String)] = [("«", "»"), ("“", "”")]
+        for (open, close) in pairs {
+            if let o = a.range(of: open), let c = a[o.upperBound...].range(of: close) {
+                a[o.upperBound..<c.lowerBound].backgroundColor = Color(hex: 0xF9E08A)
+                a[o.upperBound..<c.lowerBound].foregroundColor = Palette.ink
+            }
+        }
+        return a
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            ScrollView { task }
-                .padding(.horizontal, 20)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    if step.retry {
+                        Tag(text: "Ещё раз · с опорой", icon: "arrow.uturn.backward", fill: Palette.peach).padding(.top, 18)
+                    }
+                    Text("Выберите выражение").font(WPFont.hand(22)).foregroundStyle(Color(hex: 0x645C52)).padding(.top, 16)
+                    Text(question)
+                        .font(WPFont.rubik(24))
+                        .foregroundStyle(Palette.text)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.top, 2)
+                        .accessibilityAddTraits(.isHeader)
+                    VStack(spacing: 10) {
+                        ForEach(options, id: \.self) { o in
+                            OptionTile(
+                                text: o,
+                                selected: !checked && picked == o,
+                                state: rowState(o),
+                                note: checked ? model.optionMeaning(o, for: item) : nil
+                            ) {
+                                if !checked { picked = o }
+                            }
+                        }
+                    }
+                    .padding(.top, 20)
+                    if checked { plate.padding(.top, 14) }
+                }
+                .padding(.trailing, 3)
+                .padding(.bottom, 16)
+            }
+            .padding(.horizontal, 20)
             if checked {
-                sheet
+                PrimaryButton(title: "Дальше") { model.advance() }
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 8)
             } else {
                 PrimaryButton(title: "Проверить", enabled: picked != nil) {
                     guard let p = picked else { return }
@@ -263,75 +324,52 @@ struct RecognizeStep: View {
         }
     }
 
-    private var task: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            if step.retry {
-                Tag(text: "Ещё раз · с опорой", icon: "arrow.uturn.backward", fill: Palette.peach).padding(.top, 18)
-            }
-            ScreenTitle(text: "Выберите выражение", size: 29).padding(.top, 18)
-            Text(question)
-                .font(WPFont.nunito(19, .semibold))
-                .foregroundStyle(Palette.text)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(.top, 8)
-            VStack(spacing: 14) {
-                ForEach(Array(options.enumerated()), id: \.element) { i, o in
-                    OptionTile(
-                        text: o, style: .of(i),
-                        selected: !checked && picked == o,
-                        dimmed: !checked && picked != nil && picked != o,
-                        state: checked ? (o == item.phrase ? .right : .wrong) : .idle,
-                        note: checked ? model.optionMeaning(o, for: item) : nil
-                    ) {
-                        if !checked { picked = o }
-                    }
-                }
-            }
-            .padding(.top, checked ? 18 : 24)
-        }
-        .padding(.bottom, 16)
+    private func rowState(_ o: String) -> OptionTile.OptionState {
+        guard checked else { return .idle }
+        if o == item.phrase { return .right }
+        if o == picked { return .wrong }
+        return .idle
     }
 
-    private var sheet: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text(correct ? "Верно!" : "Не совсем").font(WPFont.rubik(28)).accessibilityAddTraits(.isHeader)
-            if !correct, let why = model.optionExplanation(picked ?? "", for: item) {
-                Text(why).font(WPFont.nunito(15)).fixedSize(horizontal: false, vertical: true)
+    private var plate: some View {
+        let sentence = item.example?.en ?? item.gap.fullSentence
+        return VStack(alignment: .leading, spacing: 8) {
+            Text(correct ? "Верно!" : "Не совсем")
+                .font(WPFont.rubik(22))
+                .foregroundStyle(correct ? Color(hex: 0x2F7D4F) : Color(hex: 0xB23A24))
+                .accessibilityAddTraits(.isHeader)
+            Group {
+                if !correct, let why = model.optionExplanation(picked ?? "", for: item) {
+                    Text(why)
+                } else {
+                    Text(item.phrase).font(WPFont.nunito(15, .heavy)) + Text(" — \(model.prefs.showTranslation ? item.translationRu : item.meaningEn)")
+                }
             }
-            (Text(item.phrase).font(WPFont.nunito(16, .heavy)) + Text(" — \(model.prefs.showTranslation ? item.translationRu : item.meaningEn)").font(WPFont.nunito(16)))
-                .fixedSize(horizontal: false, vertical: true)
-            let sentence = item.example?.en ?? item.gap.fullSentence
+            .font(WPFont.nunito(15))
+            .fixedSize(horizontal: false, vertical: true)
+            DashedDivider.Line()
+                .stroke(correct ? Color(hex: 0xBFDCC6) : Color(hex: 0xF1C4B8), style: StrokeStyle(lineWidth: 2, dash: [6, 5]))
+                .frame(height: 2)
+                .padding(.vertical, 2)
             HStack(alignment: .top, spacing: 10) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(ExampleBox.bolded(sentence, item.phrase)).font(WPFont.nunito(16, .semibold))
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(ExampleBox.bolded(sentence, item.phrase)).font(WPFont.nunito(15))
                         .fixedSize(horizontal: false, vertical: true)
                     if model.prefs.showTranslation {
-                        Text(item.example?.ru ?? item.gap.translationRu).font(WPFont.nunito(14)).foregroundStyle(Palette.inkSoft)
+                        Text(item.example?.ru ?? item.gap.translationRu).font(WPFont.nunito(13)).foregroundStyle(Palette.inkSoft)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                 }
                 Spacer(minLength: 0)
                 ListenButton(label: "Послушать пример") { model.speakEnglish(sentence) }
             }
-            .padding(.horizontal, 14).padding(.vertical, 12)
-            .background(Palette.cream, in: Radii.shape(1))
-            .overlay(Radii.shape(1).stroke(Palette.ink, lineWidth: 2.5))
-            PrimaryButtonInk(title: "Дальше") { model.advance() }
-                .padding(.top, 6)
         }
         .foregroundStyle(Palette.ink)
-        .padding(.horizontal, 20)
-        .padding(.top, 26)
-        .padding(.bottom, 8)
-        .frame(maxWidth: .infinity, alignment: .topLeading)
-        .fixedSize(horizontal: false, vertical: true)
-        .background {
-            WavyTop()
-                .fill(correct ? Palette.teal : Palette.peach)
-                .overlay(WavyTop().stroke(Palette.outline, lineWidth: 2.5))
-                .ignoresSafeArea(edges: .bottom)
-        }
-        .transition(.move(edge: .bottom))
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(correct ? Color(hex: 0xE8F3EA) : Color(hex: 0xFBE9E4), in: Radii.shape(2))
+        .overlay(Radii.shape(2).stroke(correct ? Color(hex: 0xBFDCC6) : Color(hex: 0xF1C4B8), lineWidth: 2))
+        .accessibilityElement(children: .contain)
     }
 }
 

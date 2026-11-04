@@ -195,9 +195,9 @@ struct LevelTestScreen: View {
                     .fixedSize(horizontal: false, vertical: true)
                 VStack(spacing: 14) {
                     ForEach(Array(options.enumerated()), id: \.element) { i, o in
-                        OptionTile(text: o, style: .of(i), selected: picked == o) { picked = o }
+                        OptionTile(text: o, selected: picked == o) { picked = o }
                     }
-                    OptionTile(text: "Не знаю", style: .stripes, selected: picked == "") { picked = "" }
+                    OptionTile(text: "Не знаю", selected: picked == "") { picked = "" }
                 }
                 .padding(.top, 22)
                 Spacer()
