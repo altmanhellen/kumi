@@ -421,7 +421,7 @@ struct GroupDetailView: View {
         }
         .foregroundStyle(Palette.ink)
         .padding(.horizontal, 20)
-        .padding(.bottom, 18)
+        .padding(.bottom, 26)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background {
             ZStack {
