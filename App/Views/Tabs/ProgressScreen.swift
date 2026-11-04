@@ -10,10 +10,7 @@ struct ProgressScreen: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 14) {
                     HStack(alignment: .bottom) {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Eyebrow(text: "Прогресс")
-                            ScreenTitle(text: "Что вы помните")
-                        }
+                        ScreenTitle(text: "Прогресс")
                         Spacer()
                     }
                     statesBox
