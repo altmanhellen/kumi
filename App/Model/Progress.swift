@@ -75,6 +75,16 @@ enum LearningState: String, Codable, CaseIterable {
         case .mastered: "Освоено"
         }
     }
+
+    /// Names used in the legend on the Progress tab.
+    var progressTitle: String {
+        switch self {
+        case .new: "Осталось выучить"
+        case .learning: "Начали учить"
+        case .reviewing: "Повторяем"
+        case .mastered: "Освоили"
+        }
+    }
 }
 
 /// Per-expression state, rebuilt by replaying the log.

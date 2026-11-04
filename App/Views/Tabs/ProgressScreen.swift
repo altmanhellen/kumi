@@ -62,7 +62,7 @@ struct ProgressScreen: View {
                 .frame(width: 12, height: 12)
                 .padding(.top, 4)
             VStack(alignment: .leading, spacing: 2) {
-                Text(s.title).font(WPFont.nunito(15, .heavy))
+                Text(s.progressTitle).font(WPFont.nunito(15, .heavy))
                 if let note { Text(note).font(WPFont.nunito(13)).foregroundStyle(Palette.inkSoft) }
             }
             Spacer()

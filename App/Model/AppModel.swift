@@ -169,11 +169,19 @@ final class AppModel {
     }
 
     /// What was done today: graded reviews, new expressions started and minutes spent.
-    var todayStats: (reviews: Int, news: Int, minutes: Int) {
+    var todayStats: (mastered: Int, reviews: Int, news: Int, minutes: Int) {
         let todays = file.logs.filter { StudyDay.of($0.time) == today }
         let reviews = Set(todays.filter { $0.scheduled && $0.kind == .production }.map(\.itemId)).count
         let ms = todays.map(\.answerMs).reduce(0, +)
-        return (reviews, startedTodayIds.count, max(1, Int((Double(ms) / 60000).rounded())))
+        // Expressions that are mastered now but were not before today.
+        let f = fsrs
+        var mastered = 0
+        for id in Set(todays.map(\.itemId)) where card(id).state == .mastered {
+            var before = CardState()
+            for log in file.logs where log.itemId == id && StudyDay.of(log.time) < today { before.apply(log, fsrs: f) }
+            if before.state != .mastered { mastered += 1 }
+        }
+        return (mastered, reviews, startedTodayIds.count, Int((Double(ms) / 60000).rounded()))
     }
 
     // MARK: Counters

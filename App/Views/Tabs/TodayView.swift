@@ -117,35 +117,44 @@ struct TodayView: View {
         }
     }
 
+    /// Today's progress: only the rows above zero. Hidden when nothing happened today.
+    @ViewBuilder
     private func doneCard(_ plan: DailyPlan) -> some View {
         let t = model.todayStats
-        return VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 14) {
-                Image(systemName: "checkmark")
-                    .font(.system(size: 18, weight: .black))
-                    .foregroundStyle(.white)
-                    .frame(width: 40, height: 40)
-                    .background(Circle().fill(Palette.green))
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("План выполнен").font(WPFont.rubik(19))
-                    Text("\(t.reviews) \(Plural.reviews(t.reviews)) · \(t.news) \(Plural.form(t.news, "новое", "новых", "новых")) · \(t.minutes) \(Plural.minutes(t.minutes))")
-                        .font(WPFont.nunito(14)).foregroundStyle(Palette.inkSoft)
+        let rows: [(String, String)] = [
+            ("Освоили", t.mastered > 0 ? "\(t.mastered)" : ""),
+            ("Повторили", t.reviews > 0 ? "\(t.reviews)" : ""),
+            ("Начали учить", t.news > 0 ? "\(t.news)" : ""),
+            ("Время", t.minutes > 0 ? "\(t.minutes) мин" : ""),
+        ].filter { !$0.1.isEmpty }
+        if !rows.isEmpty || plan.levelFinished {
+            VStack(alignment: .leading, spacing: 0) {
+                Text("Сегодня").font(WPFont.rubik(19)).padding(.bottom, 6)
+                ForEach(Array(rows.enumerated()), id: \.offset) { i, row in
+                    if i > 0 {
+                        DashedDivider.Line().stroke(Palette.ink.opacity(0.25), style: StrokeStyle(lineWidth: 2, dash: [6, 5])).frame(height: 2)
+                    }
+                    HStack {
+                        Text(row.0).font(WPFont.nunito(15, .bold))
+                        Spacer()
+                        Text(row.1).font(WPFont.rubik(18))
+                    }
+                    .frame(minHeight: 40)
+                    .accessibilityElement(children: .combine)
                 }
-                Spacer(minLength: 0)
-            }
-            if plan.levelFinished, let next = model.prefs.level.next {
-                Button("Новые уровня \(model.prefs.level.rawValue) закончились · перейти на \(next.rawValue)") {
-                    model.updatePrefs { $0.level = next }
+                if plan.levelFinished, let next = model.prefs.level.next {
+                    Button("Новые уровня \(model.prefs.level.rawValue) закончились · перейти на \(next.rawValue)") {
+                        model.updatePrefs { $0.level = next }
+                    }
+                    .font(WPFont.nunito(14, .heavy)).underline().foregroundStyle(Palette.ink)
+                    .frame(minHeight: 44, alignment: .leading)
                 }
-                .font(WPFont.nunito(14, .heavy)).underline().foregroundStyle(Palette.ink)
-                .frame(minHeight: 44, alignment: .leading)
             }
+            .foregroundStyle(Palette.ink)
+            .padding(16)
+            .background(Color(hex: 0xFBF0C9), in: Radii.shape(0))
+            .fillOutline(Radii.shape(0))
         }
-        .foregroundStyle(Palette.ink)
-        .padding(16)
-        .background(Color(hex: 0xFBF0C9), in: Radii.shape(0))
-        .fillOutline(Radii.shape(0))
-        .accessibilityElement(children: .combine)
     }
 
     private func continueCard(_ topic: String) -> some View {
