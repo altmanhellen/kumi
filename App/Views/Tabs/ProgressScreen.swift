@@ -5,6 +5,8 @@ struct ProgressScreen: View {
     @Environment(\.colorScheme) private var scheme
 
     @State private var path = NavigationPath()
+    @State private var filter: Level?
+    @State private var filterChosen = false
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -32,16 +34,41 @@ struct ProgressScreen: View {
         }
     }
 
+    /// nil means all levels. Starts at the user's level; kept while the app stays open.
+    private var currentFilter: Level? { filterChosen ? filter : model.prefs.level }
+
+    private var levelFilter: some View {
+        HStack(spacing: 0) {
+            ForEach(Array(([nil] + Level.allCases.map { Optional($0) }).enumerated()), id: \.offset) { i, l in
+                let on = currentFilter == l
+                Button { filter = l; filterChosen = true } label: {
+                    Text(l?.rawValue ?? "Все")
+                        .font(WPFont.rubik(15, false))
+                        .foregroundStyle(on ? Color(hex: 0xF4EDDC) : Palette.ink)
+                        .frame(maxWidth: .infinity, minHeight: 36)
+                        .background(on ? Palette.ink : .clear)
+                        .overlay(alignment: .leading) {
+                            if i > 0 { Rectangle().fill(Palette.ink).frame(width: 2) }
+                        }
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(l.map { "Уровень \($0.rawValue)" } ?? "Все уровни")
+                .accessibilityAddTraits(on ? .isSelected : [])
+            }
+        }
+        .background(Color(hex: 0xFFFBF1))
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .overlay(RoundedRectangle(cornerRadius: 10).stroke(Palette.ink, lineWidth: 2.5))
+    }
+
     private var statesBox: some View {
-        let ids = model.library.items.map(\.id)
+        let ids = model.library.items.filter { currentFilter == nil || $0.level == currentFilter }.map(\.id)
         let counts = model.counts(for: ids)
         let started = ids.count - (counts[.new] ?? 0)
         return VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: .firstTextBaseline) {
-                Text("\(started) из \(ids.count) начаты").font(WPFont.nunito(16, .heavy))
-                Spacer()
-                Text("все уровни").font(WPFont.nunito(13)).foregroundStyle(Palette.inkSoft)
-            }
+            levelFilter.padding(.bottom, 4)
+            Text("\(started) из \(ids.count) начаты").font(WPFont.nunito(16, .heavy))
             StateBar(counts: counts, total: ids.count, height: 16)
             stateRow(.mastered, counts)
             stateRow(.reviewing, counts)
