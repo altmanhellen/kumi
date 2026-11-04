@@ -57,7 +57,10 @@ struct MainTabs: View {
     var body: some View {
         VStack(spacing: 0) {
         TabView(selection: $tab) {
-            TodayView(openCatalog: { tab = .catalog })
+            TodayView(openCatalog: { tab = .catalog }, openTopic: { t in
+                model.pendingCatalog = .topic(t)
+                tab = .catalog
+            })
                 .toolbar(.hidden, for: .tabBar)
                 .tag(MainTab.today)
             CatalogView()

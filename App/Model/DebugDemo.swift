@@ -29,9 +29,9 @@ extension AppModel {
         if args.contains("-wpFresh") && !prefs.onboarded {
             updatePrefs { $0.onboarded = true; $0.level = .c1; $0.topics = ["Общество и новости"] }
         }
-        if args.contains("-wpSession") && session == nil {
+        if (args.contains("-wpSession") || args.contains("-wpDone")) && session == nil {
             startToday()
-            let skip = Int(value("-wpStep") ?? "0") ?? 0
+            let skip = args.contains("-wpDone") ? 10_000 : (Int(value("-wpStep") ?? "0") ?? 0)
             for _ in 0..<skip {
                 guard let step = session?.current else { break }
                 switch step.kind {
@@ -40,6 +40,7 @@ extension AppModel {
                 case .production: _ = answerProduction(library[step.itemId]!.gap.answer); advance()
                 }
             }
+            if args.contains("-wpDone") { dismissSummary() }
         }
     }
 

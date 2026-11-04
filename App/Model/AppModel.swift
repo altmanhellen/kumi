@@ -44,6 +44,8 @@ final class AppModel {
     var lastSummary: SessionSummary?
     /// Becomes true after the second finished session, when it is time to ask about reminders.
     var shouldOfferReminder = false
+    /// A catalog screen to open when the Catalog tab appears (set from Today).
+    var pendingCatalog: CatalogFilter?
 
     var prefs: Preferences { file.prefs }
     var fsrs: FSRS { FSRS(desiredRetention: file.prefs.desiredRetention) }
@@ -102,8 +104,13 @@ final class AppModel {
             .map(\.id)
     }
 
+    /// Expressions first seen today, in the order they were introduced.
     var startedTodayIds: [String] {
-        cards.filter { $0.value.firstSeenDay == today }.map(\.key)
+        var seen = Set<String>(), result: [String] = []
+        for log in file.logs where StudyDay.of(log.time) == today && cards[log.itemId]?.firstSeenDay == today {
+            if seen.insert(log.itemId).inserted { result.append(log.itemId) }
+        }
+        return result
     }
 
     /// New expressions on the user's level, chosen topics first.
@@ -143,6 +150,30 @@ final class AppModel {
         let list = pool.isEmpty ? library.items : pool
         var rng = SplitMix64(seed: UInt64(today) &* 2654435761)
         return list[Int(rng.next() % UInt64(list.count))]
+    }
+
+    /// The most recently studied topic that still has new phrases on the user's level.
+    var continueTopic: String? {
+        var seen = Set<String>()
+        for log in file.logs.reversed() {
+            guard let item = library[log.itemId] else { continue }
+            for topic in item.topics where !seen.contains(topic) {
+                seen.insert(topic)
+                let hasNew = library.items.contains {
+                    $0.topics.contains(topic) && $0.level == prefs.level && card($0.id).firstSeenDay == nil && !isHidden($0.id)
+                }
+                if hasNew { return topic }
+            }
+        }
+        return nil
+    }
+
+    /// What was done today: graded reviews, new expressions started and minutes spent.
+    var todayStats: (reviews: Int, news: Int, minutes: Int) {
+        let todays = file.logs.filter { StudyDay.of($0.time) == today }
+        let reviews = Set(todays.filter { $0.scheduled && $0.kind == .production }.map(\.itemId)).count
+        let ms = todays.map(\.answerMs).reduce(0, +)
+        return (reviews, startedTodayIds.count, max(1, Int((Double(ms) / 60000).rounded())))
     }
 
     // MARK: Counters

@@ -85,12 +85,22 @@ struct CatalogView: View {
                 ExpressionSheet(item: item)
             }
         }
+        .onChange(of: model.pendingCatalog) { _, f in openPending(f) }
         .onAppear {
+            openPending(model.pendingCatalog)
             if !levelInitialized { level = model.prefs.level; levelInitialized = true }
             #if DEBUG
             if ProcessInfo.processInfo.arguments.contains("-wpGroup") { path = [.group("Make")] }
             #endif
         }
+    }
+
+    private func openPending(_ f: CatalogFilter?) {
+        guard let f else { return }
+        level = model.prefs.level
+        levelInitialized = true
+        path = [f]
+        model.pendingCatalog = nil
     }
 
     private var groups: [String] {

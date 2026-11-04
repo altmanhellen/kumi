@@ -3,7 +3,9 @@ import SwiftUI
 struct TodayView: View {
     @Environment(AppModel.self) private var model
     let openCatalog: () -> Void
+    var openTopic: (String) -> Void = { _ in }
     @State private var showWhy = false
+    @State private var showAllNew = false
 
     private var dateLine: String {
         let f = DateFormatter()
@@ -27,6 +29,9 @@ struct TodayView: View {
 
                 if plan.isEmpty {
                     doneCard(plan)
+                    if let topic = model.continueTopic {
+                        continueCard(topic)
+                    }
                 } else {
                     planCard(plan)
                     Button { showWhy.toggle() } label: {
@@ -53,6 +58,10 @@ struct TodayView: View {
 
                 expressionOfDay
                     .padding(.top, 8)
+
+                if plan.isEmpty && !model.startedTodayIds.isEmpty {
+                    newTodayCard
+                }
             }
             .padding(.horizontal, 20)
             .padding(.top, 18)
@@ -109,25 +118,102 @@ struct TodayView: View {
     }
 
     private func doneCard(_ plan: DailyPlan) -> some View {
-        PatternCard(style: .dots, variant: 1, blobStart: 0.72) {
-            VStack(alignment: .leading, spacing: 10) {
-                Text("План выполнен").font(WPFont.nunito(17, .heavy))
-                Text(plan.levelFinished
-                     ? "Новые выражения уровня \(model.prefs.level.rawValue) закончились."
-                     : "Повторения появятся, когда подойдёт их срок. Новые можно взять в любой момент.")
-                    .font(WPFont.nunito(14)).foregroundStyle(Palette.inkSoft)
-                if plan.levelFinished, let next = model.prefs.level.next {
-                    Button("Перейти на \(next.rawValue)") { model.updatePrefs { $0.level = next } }
-                        .font(WPFont.nunito(15, .heavy)).underline().foregroundStyle(Palette.ink)
-                        .frame(minHeight: 44)
-                } else if !plan.levelFinished {
-                    Button("Ещё 5 новых") { model.startExtraNew() }
+        let t = model.todayStats
+        return VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 14) {
+                Image(systemName: "checkmark")
+                    .font(.system(size: 18, weight: .black))
+                    .foregroundStyle(.white)
+                    .frame(width: 40, height: 40)
+                    .background(Circle().fill(Palette.green))
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("План выполнен").font(WPFont.rubik(19))
+                    Text("\(t.reviews) \(Plural.reviews(t.reviews)) · \(t.news) \(Plural.form(t.news, "новое", "новых", "новых")) · \(t.minutes) \(Plural.minutes(t.minutes))")
+                        .font(WPFont.nunito(14)).foregroundStyle(Palette.inkSoft)
+                }
+                Spacer(minLength: 0)
+            }
+            if plan.levelFinished, let next = model.prefs.level.next {
+                Button("Новые уровня \(model.prefs.level.rawValue) закончились · перейти на \(next.rawValue)") {
+                    model.updatePrefs { $0.level = next }
+                }
+                .font(WPFont.nunito(14, .heavy)).underline().foregroundStyle(Palette.ink)
+                .frame(minHeight: 44, alignment: .leading)
+            }
+        }
+        .foregroundStyle(Palette.ink)
+        .padding(16)
+        .background(Color(hex: 0xFBF0C9), in: Radii.shape(0))
+        .fillOutline(Radii.shape(0))
+        .accessibilityElement(children: .combine)
+    }
+
+    private func continueCard(_ topic: String) -> some View {
+        let level = model.prefs.level
+        let ids = model.library.items.filter { $0.topics.contains(topic) && $0.level == level }.map(\.id)
+        let counts = model.counts(for: ids)
+        let fresh = counts[.new] ?? 0
+        return Button { openTopic(topic) } label: {
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Продолжить тему").font(WPFont.hand(23)).foregroundStyle(Palette.inkSoft)
+                HStack(alignment: .firstTextBaseline) {
+                    Text("\(topic) · \(level.rawValue)").font(WPFont.rubik(22)).multilineTextAlignment(.leading)
+                    Spacer(minLength: 8)
+                    Text("\(fresh) \(Plural.form(fresh, "новое", "новых", "новых")) →").font(WPFont.nunito(15, .heavy))
+                }
+                StateBar(counts: counts, total: ids.count).padding(.top, 4)
+            }
+            .foregroundStyle(Palette.ink)
+            .padding(16)
+            .background(Color(hex: 0xE0EFEC), in: Radii.shape(1))
+            .fillOutline(Radii.shape(1))
+        }
+        .buttonStyle(PressStyle())
+    }
+
+    private var newTodayCard: some View {
+        let ids = model.startedTodayIds.compactMap { model.library[$0] }
+        return VStack(alignment: .leading, spacing: 4) {
+            HStack(alignment: .firstTextBaseline) {
+                Text("Новые сегодня").font(WPFont.rubik(19, false))
+                Spacer()
+                if ids.count > 3 {
+                    Button("все \(ids.count)") { showAllNew = true }
                         .font(WPFont.nunito(15, .heavy)).underline().foregroundStyle(Palette.ink)
                         .frame(minHeight: 44)
                 }
             }
-            .padding(22)
-            .frame(width: 240, alignment: .leading)
+            ForEach(ids.prefix(3)) { item in
+                HStack(spacing: 10) {
+                    Button { model.speakEnglish(item.phrase) } label: {
+                        Image(systemName: "speaker.wave.2").font(.system(size: 16, weight: .semibold)).frame(width: 40, height: 40)
+                    }
+                    .accessibilityLabel("Послушать: \(item.phrase)")
+                    VStack(alignment: .leading, spacing: 0) {
+                        Text(item.phrase).font(WPFont.rubik(17, false))
+                        Text(item.translationRu).font(WPFont.nunito(14)).foregroundStyle(Palette.inkSoft)
+                    }
+                    Spacer(minLength: 0)
+                }
+            }
+        }
+        .foregroundStyle(Palette.ink)
+        .padding(16)
+        .background(Color(hex: 0xFFFBF1), in: Radii.shape(2))
+        .fillOutline(Radii.shape(2))
+        .sheet(isPresented: $showAllNew) {
+            NavigationStack {
+                ScrollView {
+                    LazyVStack(spacing: 0) {
+                        ForEach(ids) { item in ExpressionRow(item: item) { } }
+                    }
+                    .padding(20)
+                }
+                .screenBackground()
+                .navigationTitle("Новые сегодня")
+                .navigationBarTitleDisplayMode(.inline)
+            }
+            .presentationDetents([.medium, .large])
         }
     }
 
