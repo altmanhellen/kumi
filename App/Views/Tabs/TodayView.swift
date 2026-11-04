@@ -117,14 +117,16 @@ struct TodayView: View {
         }
     }
 
+    private func phrases(_ n: Int) -> String { "\(n) \(Plural.form(n, "фраза", "фразы", "фраз"))" }
+
     /// Today's progress: only the rows above zero. Hidden when nothing happened today.
     @ViewBuilder
     private func doneCard(_ plan: DailyPlan) -> some View {
         let t = model.todayStats
         let rows: [(String, String)] = [
-            ("Освоили", t.mastered > 0 ? "\(t.mastered)" : ""),
-            ("Повторили", t.reviews > 0 ? "\(t.reviews)" : ""),
-            ("Начали учить", t.news > 0 ? "\(t.news)" : ""),
+            ("Освоили", t.mastered > 0 ? phrases(t.mastered) : ""),
+            ("Повторили", t.reviews > 0 ? phrases(t.reviews) : ""),
+            ("Начали учить", t.news > 0 ? phrases(t.news) : ""),
             ("Время", t.minutes > 0 ? "\(t.minutes) мин" : ""),
         ].filter { !$0.1.isEmpty }
         if !rows.isEmpty || plan.levelFinished {
