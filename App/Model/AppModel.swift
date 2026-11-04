@@ -19,7 +19,7 @@ struct DailyPlan: Equatable {
 
     /// Why the number of new cards is what it is.
     var newReason: String {
-        if catchingUp { return "Сегодня догоняем повторения: новых не будет, остаток перейдёт на завтра без штрафа." }
+        if catchingUp { return "Сегодня догоняем повторения: новых не будет, остаток перейдёт на следующее занятие без штрафа." }
         if levelFinished { return "Новые выражения вашего уровня закончились." }
         let left = max(newLimit - startedToday, 0)
         if news.count < left {

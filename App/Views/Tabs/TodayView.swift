@@ -114,7 +114,7 @@ struct TodayView: View {
                 Text("План выполнен").font(WPFont.nunito(17, .heavy))
                 Text(plan.levelFinished
                      ? "Новые выражения уровня \(model.prefs.level.rawValue) закончились."
-                     : "Повторения на завтра: \(model.library.items.filter { model.card($0.id).isDue(on: model.today + 1) }.count).")
+                     : "Повторения появятся, когда подойдёт их срок. Новые можно взять в любой момент.")
                     .font(WPFont.nunito(14)).foregroundStyle(Palette.inkSoft)
                 if plan.levelFinished, let next = model.prefs.level.next {
                     Button("Перейти на \(next.rawValue)") { model.updatePrefs { $0.level = next } }

@@ -65,21 +65,56 @@ struct SessionSummary: Equatable {
 extension AppModel {
     // MARK: Building
 
-    /// New expressions go in groups of three: intro and recognition for each, then their productions.
-    /// That puts every production 2–4 steps after the expression was shown.
+    /// Reviews first. Then every new expression is explained, then each is picked from options,
+    /// then each is typed from memory.
     static func steps(reviews: [String], news: [String]) -> [SessionStep] {
-        var steps = reviews.map { SessionStep(itemId: $0, kind: .production, review: true) }
-        var i = 0
-        while i < news.count {
-            let batch = Array(news[i..<min(i + 3, news.count)])
-            for id in batch {
-                steps.append(SessionStep(itemId: id, kind: .intro))
-                steps.append(SessionStep(itemId: id, kind: .recognition))
-            }
-            for id in batch { steps.append(SessionStep(itemId: id, kind: .production)) }
-            i += 3
+        reviews.map { SessionStep(itemId: $0, kind: .production, review: true) }
+            + news.map { SessionStep(itemId: $0, kind: .intro) }
+            + news.map { SessionStep(itemId: $0, kind: .recognition) }
+            + news.map { SessionStep(itemId: $0, kind: .production) }
+    }
+
+    /// Near-synonyms that must never stand as wrong options for each other (both would be right).
+    static let synonymGroups: [Set<String>] = [
+        ["do research", "carry out research"], ["have an argument", "fall out"],
+        ["sleep well", "sleep soundly", "deep sleep", "fast asleep"], ["make progress", "make headway"],
+        ["bitter disappointment", "bitterly disappointed"], ["deeply sorry", "deeply regret"],
+        ["go to great lengths", "go the extra mile"], ["break the bank", "cost a fortune"],
+    ]
+
+    static func areSynonyms(_ a: String, _ b: String) -> Bool {
+        synonymGroups.contains { $0.contains(a) && $0.contains(b) }
+    }
+
+    /// The right expression, one written distractor and up to two other expressions learned in this session.
+    func recognitionOptions(for item: Collocation) -> [String] {
+        var options = [item.phrase]
+        let written = item.recognition.options.filter { $0 != item.phrase }
+        if let first = written.first { options.append(first) }
+        let classmates = (session?.entries.filter { $0.value.isNew }.map(\.key) ?? [])
+            .filter { $0 != item.id }
+            .compactMap { library[$0]?.phrase }
+            .filter { !options.contains($0) && !Self.areSynonyms($0, item.phrase) }
+            .shuffled()
+        options.append(contentsOf: classmates.prefix(2))
+        for w in written.dropFirst() where options.count < 4 && !options.contains(w) { options.append(w) }
+        return options.shuffled()
+    }
+
+    func optionMeaning(_ option: String, for item: Collocation) -> String {
+        if let d = item.distractor(for: option) { return d.meaningRu }
+        if let other = library.items.first(where: { $0.phrase == option }) {
+            return prefs.showTranslation ? other.translationRu : other.meaningEn
         }
-        return steps
+        return ""
+    }
+
+    func optionExplanation(_ option: String, for item: Collocation) -> String? {
+        if let d = item.distractor(for: option) { return d.explanationRu }
+        let meaning = optionMeaning(option, for: item)
+        guard !meaning.isEmpty else { return nil }
+        let wanted = prefs.showTranslation ? item.translationRu : item.meaningEn
+        return "«\(option)» — это «\(meaning)», а по смыслу нужно «\(wanted)»."
     }
 
     func startSession(source: SessionSource, reviews: [String], news: [String]) {
@@ -275,7 +310,7 @@ extension AppModel {
             if !e.answered { note = "познакомились" }
             else if e.mistakes == 0 { note = "вспомнили сразу" }
             else if e.firstTryCorrect == false && e.mistakes < 3 { note = "ошибка → исправили в конце" }
-            else { note = "были ошибки, вернёмся завтра" }
+            else { note = "были ошибки, повторим в следующий раз" }
             let next = c.dueDay.map { StudyDay.relative($0, from: today) } ?? "в следующий раз"
             rows.append(SummaryRow(itemId: id, phrase: item.phrase, note: note, next: next))
         }

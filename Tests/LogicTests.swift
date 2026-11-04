@@ -135,15 +135,12 @@ final class AnswerCheckerTests: XCTestCase {
 
 @MainActor
 final class SessionBuildTests: XCTestCase {
-    func testNewItemsComeInBatchesWithProductionAfterTwoToFourSteps() {
-        let steps = AppModel.steps(reviews: ["r"], news: ["a", "b", "c", "d"])
-        XCTAssertEqual(steps.first?.kind, .production)
-        for id in ["a", "b", "c"] {
-            let shown = steps.firstIndex { $0.itemId == id && $0.kind == .recognition }!
-            let produced = steps.firstIndex { $0.itemId == id && $0.kind == .production }!
-            XCTAssertTrue((3...5).contains(produced - shown), "\(id): \(produced - shown)")
-        }
-        XCTAssertEqual(steps.count, 1 + 4 * 3)
+    func testAllExplanationsThenChoiceThenTyping() {
+        let steps = AppModel.steps(reviews: ["r"], news: ["a", "b", "c"])
+        XCTAssertEqual(steps.map(\.kind), [.production, .intro, .intro, .intro, .recognition, .recognition, .recognition,
+                                            .production, .production, .production])
+        XCTAssertTrue(steps[0].review)
+        XCTAssertFalse(steps[7].review)
     }
 
     func testBundledContentLoads() {

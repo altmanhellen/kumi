@@ -16,35 +16,41 @@ struct ProduceStep: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
-                    if step.review {
-                        Tag(text: "Повторение · подошёл срок", icon: "clock.arrow.circlepath", fill: Palette.yellow).padding(.top, 18)
-                    } else if step.retry {
-                        Tag(text: "Ещё раз", icon: "arrow.uturn.backward", fill: Palette.peach).padding(.top, 18)
-                    }
-                    ScreenTitle(text: step.review ? "Вспомните выражение" : "Впишите выражение целиком", size: 29).padding(.top, 14)
-                    Text("Без вариантов: вспомните фразу сами. \(item.gap.answerWordCount) \(Plural.form(item.gap.answerWordCount, "слово", "слова", "слов")).")
-                        .font(WPFont.nunito(15)).foregroundStyle(Palette.muted).padding(.top, 4)
+                if let result {
+                    ProductionFeedback(item: item, result: result, typed: text)
+                        .padding(.top, 16)
+                        .padding(.bottom, 12)
+                } else {
+                    VStack(alignment: .leading, spacing: 0) {
+                        if step.review {
+                            Tag(text: "Повторение · подошёл срок", icon: "clock.arrow.circlepath", fill: Palette.yellow).padding(.top, 18)
+                        } else if step.retry {
+                            Tag(text: "Ещё раз", icon: "arrow.uturn.backward", fill: Palette.peach).padding(.top, 18)
+                        }
+                        ScreenTitle(text: step.review ? "Вспомните выражение" : "Впишите выражение целиком", size: 29).padding(.top, 14)
+                        Text("Без вариантов: вспомните фразу сами. \(item.gap.answerWordCount) \(Plural.form(item.gap.answerWordCount, "слово", "слова", "слов")).")
+                            .font(WPFont.nunito(15)).foregroundStyle(Palette.muted).padding(.top, 4)
 
-                    sentenceCard.padding(.top, 20)
+                        sentenceCard.padding(.top, 20)
 
-                    Text(item.meaningEn)
-                        .font(WPFont.nunito(15))
-                        .foregroundStyle(Palette.muted)
-                        .padding(.top, 12)
-                        .padding(.horizontal, 2)
+                        Text(item.meaningEn)
+                            .font(WPFont.nunito(15))
+                            .foregroundStyle(Palette.muted)
+                            .padding(.top, 12)
+                            .padding(.horizontal, 2)
 
-                    if result == nil {
                         helpers.padding(.top, 12)
                     }
+                    .padding(.bottom, 12)
                 }
-                .padding(.bottom, 12)
             }
-            .scrollDismissesKeyboard(.never)
+            .scrollDismissesKeyboard(.interactively)
             .padding(.horizontal, 20)
 
-            if let result {
-                ProductionFeedback(item: item, result: result, typed: text) { model.advance() }
+            if result != nil {
+                PrimaryButton(title: "Дальше") { model.advance() }
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 8)
             } else {
                 VStack(spacing: 2) {
                     PrimaryButton(title: "Проверить", enabled: !text.trimmingCharacters(in: .whitespaces).isEmpty) { check() }
@@ -67,7 +73,6 @@ struct ProduceStep: View {
                 return
             }
             #endif
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { focused = true }
         }
     }
 
@@ -162,7 +167,6 @@ struct ProductionFeedback: View {
     let item: Collocation
     let result: CheckResult
     let typed: String
-    let next: () -> Void
 
     private var title: String {
         switch result.verdict {
@@ -174,55 +178,39 @@ struct ProductionFeedback: View {
         }
     }
 
+    private var note: String? {
+        switch result.verdict {
+        case .distractor(let d): d.explanationRu
+        case .spelling: "С уровня B2 засчитываем только точное написание."
+        case .typoAccepted: "Засчитали, но проверьте написание."
+        default: nil
+        }
+    }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(title).font(WPFont.rubik(26)).fixedSize(horizontal: false, vertical: true).accessibilityAddTraits(.isHeader)
-            if !typed.isEmpty && result.verdict != .correct {
-                yourAnswer
+        VStack(alignment: .leading, spacing: 10) {
+            FeedbackCard(
+                title: title,
+                good: result.verdict.isCorrect,
+                text: note,
+                phrase: nil,
+                meaning: nil,
+                sentence: item.gap.fullSentence,
+                translation: model.prefs.showTranslation ? item.gap.translationRu : nil,
+                highlight: item.gap.answer,
+                listen: { model.speakEnglish(item.gap.fullSentence) }
+            ) {
+                if !typed.isEmpty && result.verdict != .correct { yourAnswer }
             }
-            if case .distractor(let d) = result.verdict {
-                Text(d.explanationRu).font(WPFont.nunito(15)).fixedSize(horizontal: false, vertical: true)
-            } else if result.verdict == .spelling {
-                Text("С уровня B2 засчитываем только точное написание. Посмотрите, как пишется:").font(WPFont.nunito(15)).fixedSize(horizontal: false, vertical: true)
-            } else if result.verdict == .typoAccepted {
-                Text("Засчитали, но проверьте написание.").font(WPFont.nunito(15))
-            }
-            HStack(alignment: .top, spacing: 10) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(ExampleBox.bolded(item.gap.fullSentence, item.gap.answer)).font(WPFont.nunito(16, .semibold))
-                        .fixedSize(horizontal: false, vertical: true)
-                    if model.prefs.showTranslation {
-                        Text(item.gap.translationRu).font(WPFont.nunito(14)).foregroundStyle(Palette.inkSoft)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                }
-                Spacer(minLength: 0)
-                ListenButton(label: "Послушать предложение") { model.speakEnglish(item.gap.fullSentence) }
-            }
-            .padding(.horizontal, 14).padding(.vertical, 12)
-            .background(Palette.cream, in: Radii.shape(1))
-            .overlay(Radii.shape(1).stroke(Palette.ink, lineWidth: 2.5))
+            (Text(item.phrase).font(WPFont.nunito(16, .heavy)) + Text(" — \(model.prefs.showTranslation ? item.translationRu : item.meaningEn)").font(WPFont.nunito(16)))
+                .foregroundStyle(Palette.text)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, 4)
             if !result.verdict.isCorrect {
-                Text("Вернёмся к нему позже в этом занятии.").font(WPFont.nunito(13, .bold)).foregroundStyle(Palette.inkSoft)
+                Text("Вернёмся к нему позже в этом занятии.").font(WPFont.nunito(14, .bold)).foregroundStyle(Palette.muted)
+                    .padding(.horizontal, 4)
             }
-            PrimaryButtonInk(title: "Дальше", action: next).padding(.top, 4)
         }
-        .foregroundStyle(Palette.ink)
-        .padding(.horizontal, 20)
-        .padding(.top, 20)
-        .padding(.bottom, 8)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background {
-            let good = result.verdict.isCorrect
-            ZStack {
-                (good ? PatternStyle.waves : PatternStyle.hatch).base
-                PatternFill(style: good ? .waves : .hatch).opacity(0.35).clipShape(SideBlob(start: 0.82, variant: 1))
-            }
-            .clipShape(WobblyRect(variant: 3))
-            .overlay(WobblyRect(variant: 3).stroke(Palette.outline, lineWidth: 2.5))
-            .ignoresSafeArea(edges: .bottom)
-        }
-        .onAppear { model.speakEnglish(item.gap.fullSentence) }
     }
 
     private var yourAnswer: some View {

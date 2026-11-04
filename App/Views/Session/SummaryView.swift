@@ -19,7 +19,7 @@ struct SummaryView: View {
                     .padding(.top, 22)
 
                     if summary.source == .onboarding {
-                        Text("\(summary.newStarted) \(Plural.expressions(summary.newStarted)) начаты. Завтра проверим их и дадим новые.")
+                        Text("\(summary.newStarted) \(Plural.expressions(summary.newStarted)) начаты. В следующий раз проверим их и дадим новые.")
                             .font(WPFont.nunito(16)).foregroundStyle(Palette.secondary).padding(.top, 18)
                     }
 
@@ -53,7 +53,7 @@ struct SummaryView: View {
                         Image(systemName: "calendar").font(.system(size: 22, weight: .semibold))
                         VStack(alignment: .leading, spacing: 0) {
                             Text("Следующее занятие").font(WPFont.nunito(16, .heavy))
-                            Text("завтра: \(summary.tomorrowDue) \(Plural.reviews(summary.tomorrowDue)) + новые по лимиту")
+                            Text("когда удобно: повторения, у которых подошёл срок, и новые по лимиту")
                                 .font(WPFont.nunito(14)).foregroundStyle(Color(hex: 0x4A3A2E))
                         }
                         Spacer()

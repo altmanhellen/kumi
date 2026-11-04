@@ -100,7 +100,6 @@ struct IntroStep: View {
         }
         .padding(.horizontal, 20)
         .padding(.bottom, 4)
-        .onAppear { model.speakEnglish(item.phrase) }
     }
 }
 
@@ -163,51 +162,20 @@ struct RecognizeStep: View {
     @State private var checked = false
     @State private var correct = false
 
+    private var question: String {
+        model.prefs.showTranslation ? item.recognition.promptRu : "Which expression means “\(item.meaningEn)”?"
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
-                    if step.retry {
-                        Tag(text: "Ещё раз · с опорой", icon: "arrow.uturn.backward", fill: Palette.peach).padding(.top, 18)
-                    }
-                    ScreenTitle(text: "Выберите выражение", size: 29).padding(.top, 18)
-                    Text(model.prefs.showTranslation ? item.recognition.promptRu : "Which expression means “\(item.meaningEn)”?")
-                        .font(WPFont.nunito(19, .semibold))
-                        .foregroundStyle(Palette.text)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .padding(.top, 8)
-                    VStack(spacing: 16) {
-                        ForEach(Array(options.enumerated()), id: \.element) { i, o in
-                            OptionTile(text: o, style: .of(i), selected: picked == o && !checked, state: tileState(o)) {
-                                if !checked { picked = o }
-                            }
-                            .disabled(checked)
-                            if checked, o != item.phrase, let d = item.distractor(for: o) {
-                                Text("\(o) — \(d.meaningRu)")
-                                    .font(WPFont.nunito(14)).foregroundStyle(Palette.muted)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                    .padding(.top, -8)
-                            }
-                        }
-                    }
-                    .padding(.top, 26)
-                }
-                .padding(.bottom, 12)
+                if checked { result } else { task }
             }
             .padding(.horizontal, 20)
             if checked {
-                FeedbackPanel(
-                    title: correct ? "Верно!" : "Не совсем",
-                    good: correct,
-                    text: correct ? nil : wrongExplanation,
-                    phrase: item.phrase,
-                    meaning: model.prefs.showTranslation ? item.translationRu : item.meaningEn,
-                    sentence: item.example?.en ?? item.gap.fullSentence,
-                    translation: model.prefs.showTranslation ? (item.example?.ru ?? item.gap.translationRu) : nil,
-                    highlight: item.phrase,
-                    listen: { model.speakEnglish(item.example?.en ?? item.gap.fullSentence) },
-                    next: { model.advance() }
-                )
+                PrimaryButton(title: "Дальше") { model.advance() }
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 8)
             } else {
                 PrimaryButton(title: "Проверить", enabled: picked != nil) {
                     guard let p = picked else { return }
@@ -219,7 +187,7 @@ struct RecognizeStep: View {
             }
         }
         .onAppear {
-            if options.isEmpty { options = item.recognition.options.shuffled() }
+            if options.isEmpty { options = model.recognitionOptions(for: item) }
             #if DEBUG
             if ProcessInfo.processInfo.arguments.contains("-wpPickWrong") {
                 picked = options.first { $0 != item.phrase }
@@ -230,40 +198,94 @@ struct RecognizeStep: View {
         }
     }
 
-    private var wrongExplanation: String? {
-        guard let p = picked, let d = item.distractor(for: p) else { return nil }
-        return d.explanationRu
+    private var task: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            if step.retry {
+                Tag(text: "Ещё раз · с опорой", icon: "arrow.uturn.backward", fill: Palette.peach).padding(.top, 18)
+            }
+            ScreenTitle(text: "Выберите выражение", size: 29).padding(.top, 18)
+            Text(question)
+                .font(WPFont.nunito(19, .semibold))
+                .foregroundStyle(Palette.text)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, 8)
+            VStack(spacing: 14) {
+                ForEach(Array(options.enumerated()), id: \.element) { i, o in
+                    OptionTile(text: o, style: .of(i), selected: picked == o) { picked = o }
+                }
+            }
+            .padding(.top, 24)
+        }
+        .padding(.bottom, 12)
     }
 
-    private func tileState(_ o: String) -> OptionTile.OptionState {
-        guard checked else { return .idle }
-        if o == item.phrase { return .right }
-        if o == picked { return .wrong }
-        return .dimmed
+    /// The verdict card sits high on the screen; the breakdown of the other options goes under it.
+    private var result: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text(question)
+                .font(WPFont.nunito(16, .semibold))
+                .foregroundStyle(Palette.muted)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, 16)
+            FeedbackCard(
+                title: correct ? "Верно!" : "Не совсем",
+                good: correct,
+                text: correct ? nil : model.optionExplanation(picked ?? "", for: item),
+                phrase: item.phrase,
+                meaning: model.prefs.showTranslation ? item.translationRu : item.meaningEn,
+                sentence: item.example?.en ?? item.gap.fullSentence,
+                translation: model.prefs.showTranslation ? (item.example?.ru ?? item.gap.translationRu) : nil,
+                highlight: item.phrase,
+                listen: { model.speakEnglish(item.example?.en ?? item.gap.fullSentence) }
+            )
+            VStack(spacing: 8) {
+                ForEach(options.filter { $0 != item.phrase }, id: \.self) { o in
+                    HStack(alignment: .top, spacing: 10) {
+                        Image(systemName: o == picked ? "xmark.circle.fill" : "circle.dashed")
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundStyle(Palette.muted)
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text(o).font(WPFont.rubik(17, false)).foregroundStyle(Palette.text)
+                            Text(model.optionMeaning(o, for: item)).font(WPFont.nunito(14)).foregroundStyle(Palette.muted)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        Spacer(minLength: 0)
+                    }
+                    .padding(.horizontal, 14).padding(.vertical, 10)
+                    .background(Palette.paper, in: Radii.shape(2))
+                    .overlay(Radii.shape(2).stroke(Palette.outline, lineWidth: 2))
+                    .accessibilityElement(children: .combine)
+                }
+            }
+        }
+        .padding(.bottom, 12)
     }
 }
 
-/// Result panel at the bottom: verdict, explanation, example with translation, "Дальше".
-struct FeedbackPanel: View {
+/// Result card: verdict, explanation, example with translation and a listen button.
+struct FeedbackCard<Extra: View>: View {
     let title: String
     let good: Bool
     var text: String?
-    let phrase: String
-    let meaning: String
+    var phrase: String?
+    var meaning: String?
     let sentence: String
     let translation: String?
     var highlight: String?
     let listen: () -> Void
-    let next: () -> Void
+    @ViewBuilder var extra: Extra
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title).font(WPFont.rubik(28)).fixedSize(horizontal: false, vertical: true).accessibilityAddTraits(.isHeader)
+            extra
             if let text {
                 Text(text).font(WPFont.nunito(16)).fixedSize(horizontal: false, vertical: true)
             }
-            (Text(phrase).font(WPFont.nunito(16, .heavy)) + Text(" — \(meaning)").font(WPFont.nunito(16)))
-                .fixedSize(horizontal: false, vertical: true)
+            if let phrase, let meaning {
+                (Text(phrase).font(WPFont.nunito(16, .heavy)) + Text(" — \(meaning)").font(WPFont.nunito(16)))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
             HStack(alignment: .top, spacing: 10) {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(ExampleBox.bolded(sentence, highlight)).font(WPFont.nunito(16, .semibold))
@@ -279,40 +301,27 @@ struct FeedbackPanel: View {
             .padding(.horizontal, 14).padding(.vertical, 12)
             .background(Palette.cream, in: Radii.shape(1))
             .overlay(Radii.shape(1).stroke(Palette.ink, lineWidth: 2.5))
-            PrimaryButtonInk(title: "Дальше", action: next).padding(.top, 6)
         }
         .foregroundStyle(Palette.ink)
-        .padding(.horizontal, 20)
-        .padding(.top, 22)
-        .padding(.bottom, 8)
+        .padding(18)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background {
             ZStack {
                 (good ? PatternStyle.waves : PatternStyle.hatch).base
                 PatternFill(style: good ? .waves : .hatch).opacity(0.35)
-                    .clipShape(SideBlob(start: 0.8, variant: 1))
+                    .clipShape(SideBlob(start: 0.82, variant: 1))
             }
             .clipShape(WobblyRect(variant: 3))
-            .overlay(WobblyRect(variant: 3).stroke(Palette.outline, lineWidth: 2.5))
-            .ignoresSafeArea(edges: .bottom)
         }
+        .overlay(WobblyRect(variant: 3).stroke(Palette.outline, lineWidth: 2.5))
         .accessibilityElement(children: .contain)
     }
 }
 
-/// Main button that stays dark on light colored panels in both themes.
-struct PrimaryButtonInk: View {
-    let title: String
-    let action: () -> Void
-    var body: some View {
-        Button(action: action) {
-            Text(title)
-                .font(WPFont.rubik(19, false, relativeTo: .headline))
-                .foregroundStyle(Color(hex: 0xF4EDDC))
-                .frame(maxWidth: .infinity, minHeight: 58)
-                .background(Palette.ink)
-                .clipShape(TornShape())
-        }
-        .buttonStyle(PressStyle())
+extension FeedbackCard where Extra == EmptyView {
+    init(title: String, good: Bool, text: String?, phrase: String?, meaning: String?, sentence: String,
+         translation: String?, highlight: String?, listen: @escaping () -> Void) {
+        self.init(title: title, good: good, text: text, phrase: phrase, meaning: meaning, sentence: sentence,
+                  translation: translation, highlight: highlight, listen: listen) { EmptyView() }
     }
 }
