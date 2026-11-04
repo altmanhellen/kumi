@@ -230,10 +230,10 @@ struct StateBar: View {
                 ForEach([LearningState.mastered, .reviewing, .learning], id: \.self) { s in
                     let n = counts[s] ?? 0
                     if n > 0 && total > 0 {
-                        // Each colored segment ends with an ink divider so neighbouring states stay apart.
+                        // Each colored segment ends with a thin cream gap so neighbouring states stay apart.
                         Rectangle().fill(Palette.stateColor(s))
                             .frame(width: max(geo.size.width * CGFloat(n) / CGFloat(total), 6))
-                            .overlay(alignment: .trailing) { Rectangle().fill(Palette.ink).frame(width: 2) }
+                            .overlay(alignment: .trailing) { Rectangle().fill(Color(hex: 0xFFFBF1)).frame(width: 1.5) }
                     }
                 }
                 Spacer(minLength: 0)
