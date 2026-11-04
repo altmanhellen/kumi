@@ -43,7 +43,7 @@ struct SettingsView: View {
                         SettingsRow(title: "Медленное воспроизведение", value: String(format: "%.1f×", model.prefs.slowRate))
                     }
                 }
-                note("Используются только голоса, встроенные в iOS. Новые голоса скачиваются в Настройках iPhone: Универсальный доступ → Устный контент → Голоса.")
+                note("Используются только голоса, встроенные в iOS. Новые голоса скачиваются в Настройках iPhone: Универсальный доступ → Устный контент (в iOS 26 — «Чтение вслух») → Голоса.")
 
                 section("Обучение")
                 PaperBox(variant: 1) {
@@ -81,7 +81,7 @@ struct SettingsView: View {
                             Button("\(Int(r * 100))%") { model.updatePrefs { $0.desiredRetention = r } }
                         }
                     } label: {
-                        SettingsRow(title: "Целевое удержание", subtitle: "выше — чаще повторения", value: "\(Int(model.prefs.desiredRetention * 100))%")
+                        SettingsRow(title: "Частота повторений", subtitle: "Выше % — чаще повторения", value: "\(Int(model.prefs.desiredRetention * 100))%")
                     }
                 }
 
