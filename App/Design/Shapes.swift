@@ -72,7 +72,7 @@ enum PatternStyle: Int, CaseIterable {
         case .waves: Color(hex: 0xE0EFEC)
         case .hatch: Color(hex: 0xFADCC8)
         case .dots: Color(hex: 0xFBF0C9)
-        case .stripes: Color(hex: 0xECE5FB)
+        case .stripes: Color(hex: 0xECE4F8)
         }
     }
 
@@ -81,7 +81,7 @@ enum PatternStyle: Int, CaseIterable {
         case .waves: Color(hex: 0x7FC8C1)
         case .hatch: Color(hex: 0xEE8A52)
         case .dots: Color(hex: 0xF6CF47)
-        case .stripes: Color(hex: 0xB9A3EC)
+        case .stripes: Color(hex: 0xB9A2E8)
         }
     }
 
@@ -154,7 +154,7 @@ struct PatternFill: View {
                     p.addCurve(to: CGPoint(x: size.width + 10, y: y + 4),
                                control1: CGPoint(x: size.width * 0.3, y: y - 8),
                                control2: CGPoint(x: size.width * 0.6, y: y + 12))
-                    ctx.stroke(p, with: .color(Color(hex: 0xE07A8A)), style: StrokeStyle(lineWidth: 6, lineCap: .round))
+                    ctx.stroke(p, with: .color(Color(hex: 0xE87FA0)), style: StrokeStyle(lineWidth: 6, lineCap: .round))
                     y += 26
                 }
             }

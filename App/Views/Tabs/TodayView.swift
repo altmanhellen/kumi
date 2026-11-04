@@ -132,7 +132,7 @@ struct TodayView: View {
                 Text("Сегодня").font(WPFont.rubik(19)).padding(.bottom, 6)
                 ForEach(Array(rows.enumerated()), id: \.offset) { i, row in
                     if i > 0 {
-                        DashedDivider.Line().stroke(Palette.ink.opacity(0.25), style: StrokeStyle(lineWidth: 2, dash: [6, 5])).frame(height: 2)
+                        DashedDivider.Line().stroke(Palette.ink.opacity(0.2), style: StrokeStyle(lineWidth: 2, dash: [6, 5])).frame(height: 2)
                     }
                     HStack {
                         Text(row.0).font(WPFont.nunito(15, .bold))
@@ -150,10 +150,8 @@ struct TodayView: View {
                     .frame(minHeight: 44, alignment: .leading)
                 }
             }
-            .foregroundStyle(Palette.ink)
-            .padding(16)
-            .background(Color(hex: 0xFBF0C9), in: Radii.shape(0))
-            .fillOutline(Radii.shape(0))
+            .padding(.leading, 20).padding(.trailing, 92).padding(.vertical, 16)
+            .wrapInPatternCard(.dots, variant: 1)
         }
     }
 
@@ -165,17 +163,12 @@ struct TodayView: View {
         return Button { openTopic(topic) } label: {
             VStack(alignment: .leading, spacing: 6) {
                 Text("Продолжить тему").font(WPFont.hand(23)).foregroundStyle(Palette.inkSoft)
-                HStack(alignment: .firstTextBaseline) {
-                    Text("\(topic) · \(level.rawValue)").font(WPFont.rubik(22)).multilineTextAlignment(.leading)
-                    Spacer(minLength: 8)
-                    Text("\(fresh) \(Plural.form(fresh, "новое", "новых", "новых")) →").font(WPFont.nunito(15, .heavy))
-                }
+                Text("\(topic) · \(level.rawValue)").font(WPFont.rubik(22)).multilineTextAlignment(.leading)
+                Text("\(fresh) \(Plural.form(fresh, "новое", "новых", "новых")) →").font(WPFont.nunito(15, .heavy))
                 StateBar(counts: counts, total: ids.count).padding(.top, 4)
             }
-            .foregroundStyle(Palette.ink)
-            .padding(16)
-            .background(Color(hex: 0xE0EFEC), in: Radii.shape(1))
-            .fillOutline(Radii.shape(1))
+            .padding(.leading, 20).padding(.trailing, 92).padding(.vertical, 16)
+            .wrapInPatternCard(.waves, variant: 0)
         }
         .buttonStyle(PressStyle())
     }
@@ -206,10 +199,8 @@ struct TodayView: View {
                 }
             }
         }
-        .foregroundStyle(Palette.ink)
-        .padding(16)
-        .background(Color(hex: 0xFFFBF1), in: Radii.shape(2))
-        .fillOutline(Radii.shape(2))
+        .padding(.leading, 20).padding(.trailing, 92).padding(.vertical, 16)
+        .wrapInPatternCard(.stripes, variant: 2)
         .sheet(isPresented: $showAllNew) {
             NavigationStack {
                 ScrollView {
@@ -290,5 +281,12 @@ struct ReminderOffer: View {
         }
         .padding(24)
         .screenBackground()
+    }
+}
+
+private extension View {
+    /// Today cards use the same illustrated card as the Catalog groups.
+    func wrapInPatternCard(_ style: PatternStyle, variant: Int) -> some View {
+        PatternCard(style: style, variant: variant, blobStart: 0.78) { self }
     }
 }

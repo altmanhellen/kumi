@@ -18,7 +18,6 @@ struct ProgressScreen: View {
                         Spacer()
                     }
                     statesBox
-                    dueBox
                     regularity.padding(.top, 12)
                 }
                 .padding(.horizontal, 20)
