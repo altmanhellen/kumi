@@ -330,6 +330,9 @@ struct GroupDetailView: View {
             }
 
         }
+        #if DEBUG
+        .onAppear { if ProcessInfo.processInfo.arguments.contains("-wpLimit") { overLimit = true } }
+        #endif
         .safeAreaInset(edge: .bottom, spacing: 0) {
                 VStack(spacing: 4) {
                     if newCount > 0 {
@@ -352,11 +355,11 @@ struct GroupDetailView: View {
         .toolbar(.hidden, for: .navigationBar)
         .toolbar(.hidden, for: .tabBar)
         .sheet(item: $openItem) { ExpressionSheet(item: $0) }
-        .alert("Дневной лимит новых исчерпан", isPresented: $overLimit) {
-            Button("Всё равно учить") { learn() }
-            Button("Отмена", role: .cancel) {}
-        } message: {
-            Text("Сегодня вы уже начали \(model.startedTodayIds.count) новых. Лишние новые сегодня — это больше повторений через несколько дней.")
+        .sheet(isPresented: $overLimit) {
+            LimitSheet(started: model.startedTodayIds.count) {
+                overLimit = false
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { learn() }
+            }
         }
     }
 
@@ -568,5 +571,63 @@ struct HeaderRule: View {
     @Environment(\.colorScheme) private var scheme
     var body: some View {
         Rectangle().fill(Palette.ink).frame(height: scheme == .dark ? 0 : 2.5)
+    }
+}
+
+/// Bottom sheet shown when today's new phrases are already started. Solid surface in both themes.
+struct LimitSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.colorScheme) private var scheme
+    let started: Int
+    let learnAnyway: () -> Void
+    @State private var height: CGFloat = 360
+
+    var body: some View {
+        let dark = scheme == .dark
+        VStack(alignment: .leading, spacing: 0) {
+            Capsule().fill(dark ? Color(hex: 0x4A423A) : Color(hex: 0xCFC4AE))
+                .frame(width: 40, height: 5)
+                .frame(maxWidth: .infinity)
+                .padding(.top, 8)
+            Eyebrow(text: "Новые на сегодня").padding(.top, 18)
+            Text("На сегодня новых достаточно")
+                .font(WPFont.rubik(26))
+                .foregroundStyle(Palette.text)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, 2)
+            Text("Вы уже начали \(started) \(Plural.form(started, "новую фразу", "новые фразы", "новых фраз")). Рекомендуется не больше 10 в день, чтобы повторения не накапливались.")
+                .font(WPFont.nunito(17))
+                .lineSpacing(17 * 0.45 - 6)
+                .foregroundStyle(dark ? Color(hex: 0xC9BFAE) : Color(hex: 0x4A433B))
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, 10)
+            PrimaryButton(title: "Продолжить завтра") { dismiss() }
+                .padding(.top, 22)
+            Button(action: learnAnyway) {
+                Text("Всё равно учить")
+                    .font(WPFont.nunito(16, .bold))
+                    .underline()
+                    .foregroundStyle(Palette.text)
+                    .frame(maxWidth: .infinity, minHeight: 44)
+            }
+            .buttonStyle(.plain)
+            .padding(.top, 4)
+        }
+        .padding(.horizontal, 20)
+        .padding(.bottom, 34)
+        .fixedSize(horizontal: false, vertical: true)
+        .background(GeometryReader { g in Color.clear.onAppear { height = g.size.height } })
+        .frame(maxHeight: .infinity, alignment: .top)
+        .presentationDetents([.height(height)])
+        .presentationCornerRadius(28)
+        .presentationBackground {
+            (dark ? Color(hex: 0x2A2521) : Color(hex: 0xFFFBF1))
+                .overlay(alignment: .top) {
+                    UnevenRoundedRectangle(topLeadingRadius: 28, topTrailingRadius: 28)
+                        .stroke(dark ? Color(hex: 0x3A332D) : Palette.ink, lineWidth: dark ? 1 : 2.5)
+                        .frame(height: 60)
+                        .mask(Rectangle().frame(height: 30).frame(maxHeight: .infinity, alignment: .top))
+                }
+        }
     }
 }

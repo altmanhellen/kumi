@@ -86,11 +86,11 @@ enum WPFont {
 
     static func handText(_ text: String) -> String { text }
 
-    /// Neucha, regular weight only. It runs larger than the Caveat sizes the designs were drawn with,
-    /// so those sizes are scaled down.
+    /// Small labels above titles and inside cards: Nunito Italic 400.
+    /// 16pt on the welcome screen, 15pt for kickers, 14pt for labels inside cards.
     static func hand(_ size: CGFloat) -> Font {
-        let scaled: [CGFloat: CGFloat] = [24: 20, 23: 19, 22: 18, 21: 18, 19: 16]
-        return .custom("Neucha", size: scaled[size] ?? (size * 0.85).rounded(), relativeTo: .headline)
+        let pt: CGFloat = size >= 24 ? 16 : (size >= 22 ? 15 : 14)
+        return .custom("NunitoItalic-Italic", size: pt, relativeTo: .subheadline)
     }
 }
 

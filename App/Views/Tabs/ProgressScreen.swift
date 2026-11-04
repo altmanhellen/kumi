@@ -16,7 +16,7 @@ struct ProgressScreen: View {
                     }
                     statesBox
                     dueBox
-                    regularity
+                    regularity.padding(.top, 12)
                     accuracy
                 }
                 .padding(.horizontal, 20)
@@ -91,7 +91,7 @@ struct ProgressScreen: View {
         let days = (0..<28).map { start + $0 }
         let past = days.filter { $0 <= today }
         let done = past.filter { studied.contains($0) }.count
-        return VStack(alignment: .leading, spacing: 8) {
+        return VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .firstTextBaseline) {
                 Text("Регулярность").font(WPFont.rubik(19, false)).foregroundStyle(Palette.text)
                 Spacer()

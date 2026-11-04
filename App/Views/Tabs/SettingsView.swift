@@ -224,7 +224,7 @@ struct SettingsView: View {
     }
 
     private func section(_ title: String) -> some View {
-        Text(title).font(WPFont.rubik(18, false)).foregroundStyle(Palette.text).padding(.top, 20).padding(.bottom, 8)
+        Text(title).font(WPFont.rubik(18, false)).foregroundStyle(Palette.text).padding(.top, 26).padding(.bottom, 12)
     }
 
     private func note(_ text: String) -> some View {
