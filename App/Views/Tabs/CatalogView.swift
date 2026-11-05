@@ -40,7 +40,7 @@ struct CatalogView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 12) {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(WPFont.labelText("Каталог")).font(WPFont.labelFontChoice == nil ? WPFont.hand(23) : WPFont.label(26)).foregroundStyle(Palette.muted)
+                        Text(WPFont.labelText("Каталог")).font(WPFont.label(26)).foregroundStyle(Palette.muted)
                         ScreenTitle(text: "Все выражения")
                     }
                     searchField
