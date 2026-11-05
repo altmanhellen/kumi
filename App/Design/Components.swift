@@ -15,12 +15,6 @@ struct PatternCard<Content: View>: View {
                 ZStack {
                     style.base
                     PatternFill(style: style).clipShape(SideBlob(start: blobStart, variant: variant))
-                    GeometryReader { geo in
-                        Gloss()
-                            .stroke(.white.opacity(0.85), style: StrokeStyle(lineWidth: 3.5, lineCap: .round))
-                            .frame(width: 56, height: 10)
-                            .offset(x: geo.size.width * (blobStart + 0.08), y: 8)
-                    }
                 }
                 .clipShape(WobblyRect(variant: variant))
                 .accessibilityHidden(true)

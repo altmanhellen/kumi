@@ -177,7 +177,6 @@ struct OptionTile: View {
             }
             .overlay(Radii.shape(1).stroke(raised ? Palette.emphasis : Palette.outline,
                                            lineWidth: raised ? (scheme == .dark ? 2.5 : 3) : (scheme == .dark ? 1.5 : 2.5)))
-            .background(Radii.shape(1).fill(Palette.emphasis).offset(x: raised ? 3 : 0, y: raised ? 3 : 0).opacity(raised ? 1 : 0))
             .opacity(dimmed ? 0.5 : 1)
             .animation(.easeOut(duration: 0.15), value: selected)
         }
