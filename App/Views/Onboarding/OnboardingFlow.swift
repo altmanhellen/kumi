@@ -5,13 +5,13 @@ enum OnboardingStep: Hashable { case level, test, topics, prefs, voices }
 
 struct OnboardingFlow: View {
     @Environment(AppModel.self) private var model
-    @State private var path: [OnboardingStep] = []
-    @State private var importing = false
+    @State var path: [OnboardingStep] = []
+    @State var importing = false
     @State private var importError: String?
 
     var body: some View {
         NavigationStack(path: $path) {
-            WelcomeScreen(start: { path.append(.level) }, restore: { importing = true })
+            welcome
                 .navigationDestination(for: OnboardingStep.self) { step in
                     Group {
                         switch step {
@@ -44,6 +44,20 @@ struct OnboardingFlow: View {
         }
         .alert(importError ?? "", isPresented: Binding(get: { importError != nil }, set: { if !$0 { importError = nil } })) {
             Button("Ок", role: .cancel) {}
+        }
+    }
+}
+
+extension OnboardingFlow {
+    @ViewBuilder
+    var welcome: some View {
+        let a = ProcessInfo.processInfo.arguments
+        let v = a.firstIndex(of: "-wpWelcome").flatMap { $0 + 1 < a.count ? WelcomeVariant(rawValue: a[$0 + 1]) : nil }
+        switch v {
+        case .quiz: WelcomeQuiz(start: { path.append(.level) }, restore: { importing = true })
+        case .mistake: WelcomeMistake(start: { path.append(.level) }, restore: { importing = true })
+        case .deck: WelcomeDeck(start: { path.append(.level) }, restore: { importing = true })
+        case nil: WelcomeScreen(start: { path.append(.level) }, restore: { importing = true })
         }
     }
 }
