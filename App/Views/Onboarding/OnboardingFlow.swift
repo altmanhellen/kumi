@@ -120,7 +120,7 @@ struct LevelScreen: View {
         VStack(alignment: .leading, spacing: 0) {
             OnboardingHeader(step: 1) { path.removeLast() }
             VStack(alignment: .leading, spacing: 6) {
-                ScreenTitle(text: "Какой у вас уровень?")
+                HighlightTitle(lead: "Какой у вас", mark: "уровень?")
                 Text("Подберём комфортную сложность для старта. Остальные уровни тоже останутся открыты.")
                     .font(WPFont.nunito(16)).foregroundStyle(Palette.muted)
             }
@@ -142,8 +142,8 @@ struct LevelScreen: View {
                             .foregroundStyle(on ? Palette.ink : Palette.text)
                             .padding(.horizontal, 16).padding(.vertical, 10)
                             .frame(minHeight: 72)
-                            .background(on ? Palette.teal : Palette.paper, in: Radii.shape(i))
-                            .overlay(Radii.shape(i).stroke(on ? Palette.emphasis : Palette.outline, lineWidth: on ? 2.5 : 1.5))
+                            .background(on ? Palette.teal : Palette.paper, in: RoundedRectangle(cornerRadius: 16))
+                            .overlay(RoundedRectangle(cornerRadius: 16).stroke(Palette.outline, lineWidth: on ? 0 : 1.5))
                         }
                         .buttonStyle(PressStyle())
                         .accessibilityAddTraits(on ? .isSelected : [])
@@ -162,7 +162,7 @@ struct LevelScreen: View {
                 .padding(.top, 22)
                 .padding(.bottom, 8)
             }
-            PrimaryButton(title: "Дальше") { path.append(.topics) }
+            YellowButton(title: "Дальше") { path.append(.topics) }
         }
         .padding(.horizontal, 20)
         .padding(.bottom, 8)
@@ -196,7 +196,7 @@ struct LevelTestScreen: View {
                         .font(WPFont.nunito(16)).foregroundStyle(Palette.muted)
                 }
                 Spacer()
-                PrimaryButton(title: "Взять \(result.rawValue)") {
+                YellowButton(title: "Взять \(result.rawValue)") {
                     model.updatePrefs { $0.level = result }
                     path.removeLast()
                 }
@@ -214,7 +214,7 @@ struct LevelTestScreen: View {
                 }
                 .padding(.top, 22)
                 Spacer()
-                PrimaryButton(title: "Дальше", enabled: picked != nil) {
+                YellowButton(title: "Дальше", enabled: picked != nil) {
                     if picked == item.phrase { right[item.level, default: 0] += 1 }
                     picked = nil
                     index += 1
@@ -269,8 +269,8 @@ struct TopicGrid: View {
                     .foregroundStyle(on ? Palette.ink : Palette.text)
                     .padding(14)
                     .frame(maxWidth: .infinity, minHeight: 116, alignment: .topLeading)
-                    .background(on ? PatternStyle.of(i).soft : Palette.paper, in: Radii.shape(i))
-                    .overlay(Radii.shape(i).stroke(on ? Palette.emphasis : Palette.outline, lineWidth: on ? 2.5 : 1.5))
+                    .background(on ? PatternStyle.of(i).soft : Palette.paper, in: RoundedRectangle(cornerRadius: 16))
+                    .overlay(RoundedRectangle(cornerRadius: 16).stroke(Palette.outline, lineWidth: on ? 0 : 1.5))
                 }
                 .buttonStyle(PressStyle())
                 .accessibilityAddTraits(on ? .isSelected : [])
@@ -297,7 +297,7 @@ struct TopicsScreen: View {
             ScrollView {
                 TopicGrid(selected: $selected).padding(.vertical, 22).padding(.trailing, 3)
             }
-            PrimaryButton(title: selected.isEmpty ? "Пропустить" : "Дальше · выбрано \(selected.count)") {
+            YellowButton(title: selected.isEmpty ? "Пропустить" : "Дальше · выбрано \(selected.count)") {
                 model.updatePrefs { p in p.topics = model.library.topics.filter { selected.contains($0) } }
                 path.append(.prefs)
             }
@@ -328,7 +328,7 @@ struct PrefsScreen: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     Eyebrow(text: "Необязательно", size: 22)
-                    ScreenTitle(text: "Перевод и озвучка")
+                    HighlightTitle(lead: "Перевод и", mark: "озвучка")
                     Text("Можно изменить позже в настройках.").font(WPFont.nunito(16)).foregroundStyle(Palette.muted).padding(.top, 6)
 
                     PaperBox(variant: 0) {
@@ -369,7 +369,7 @@ struct PrefsScreen: View {
                 .padding(.top, 18)
                 .padding(.trailing, 3)
             }
-            PrimaryButton(title: "Первое занятие · 3 карточки") { finish() }
+            YellowButton(title: "Первое занятие · 3 карточки") { finish() }
             LinkButton(title: "Пропустить") { model.updatePrefs { $0.onboarded = true } }.frame(maxWidth: .infinity)
         }
         .padding(.horizontal, 20)
@@ -404,8 +404,8 @@ struct PrefsScreen: View {
             }
             .padding(.trailing, 6)
         }
-        .background(on ? Palette.teal : Palette.paper, in: Radii.shape(i + 1))
-        .overlay(Radii.shape(i + 1).stroke(on ? Palette.emphasis : Palette.outline, lineWidth: on ? 2.5 : 1.5))
+        .background(on ? Palette.teal : Palette.paper, in: RoundedRectangle(cornerRadius: 16))
+        .overlay(RoundedRectangle(cornerRadius: 16).stroke(Palette.outline, lineWidth: on ? 0 : 1.5))
     }
 
     /// First session: 3 new expressions from the first chosen topic.

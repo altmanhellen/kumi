@@ -391,3 +391,50 @@ struct WordLines: View {
         }
     }
 }
+
+/// Big title where one word sits on a yellow highlighter with three doodle strokes beside it.
+struct HighlightTitle: View {
+    let lead: String
+    let mark: String
+    var size: CGFloat = 34
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(lead).font(WPFont.rubik(size)).foregroundStyle(Palette.text)
+            HStack(spacing: 10) {
+                Text(mark)
+                    .font(WPFont.rubik(size + 4))
+                    .foregroundStyle(Palette.ink)
+                    .lineLimit(1).minimumScaleFactor(0.7)
+                    .padding(.horizontal, 16).padding(.vertical, 1)
+                    .background(Color(hex: 0xF6CF47), in: Capsule())
+                    .rotationEffect(.degrees(-1.5))
+                Sparks().frame(width: 28, height: 38)
+            }
+        }
+        .fixedSize(horizontal: false, vertical: true)
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isHeader)
+    }
+}
+
+/// Main onboarding action: a solid yellow pill.
+struct YellowButton: View {
+    let title: String
+    var enabled = true
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Text(title)
+                .font(WPFont.rubik(21))
+                .foregroundStyle(Palette.ink)
+                .lineLimit(1).minimumScaleFactor(0.7)
+                .padding(.horizontal, 18)
+                .frame(maxWidth: .infinity, minHeight: 60)
+                .background(enabled ? Color(hex: 0xF6CF47) : Palette.disabled, in: RoundedRectangle(cornerRadius: 30))
+        }
+        .buttonStyle(PressStyle())
+        .disabled(!enabled)
+    }
+}
