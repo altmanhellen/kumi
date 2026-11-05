@@ -69,6 +69,7 @@ struct WelcomeScreen: View {
             VStack(alignment: .leading, spacing: 10) {
                 Eyebrow(text: "Добро пожаловать", size: 24)
                 ScreenTitle(text: "Kumi", size: 36)
+                Text("English Collocations").font(WPFont.rubik(18, false)).foregroundStyle(Palette.muted)
                 Text("Освойте живые английские выражения. Короткие занятия каждый день помогут говорить естественно и без пауз.")
                     .font(WPFont.nunito(18)).foregroundStyle(Palette.secondary)
                     .fixedSize(horizontal: false, vertical: true)

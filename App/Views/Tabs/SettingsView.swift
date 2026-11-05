@@ -130,7 +130,7 @@ struct SettingsView: View {
                 }
                 note(model.file.account == nil
                      ? "Без аккаунта прогресс хранится только на этом iPhone. Если удалить приложение или перейти на новый iPhone без восстановления из резервной копии iCloud, прогресс пропадёт."
-                     : "Синхронизация с сервером Word Partners включится, когда подключим сервер. Сейчас прогресс хранится на этом iPhone и попадает в его резервную копию iCloud.")
+                     : "Синхронизация с сервером Kumi включится, когда подключим сервер. Сейчас прогресс хранится на этом iPhone и попадает в его резервную копию iCloud.")
 
                 section("Данные")
                 Button { confirmReset = true } label: {
@@ -198,7 +198,7 @@ struct SettingsView: View {
             Task {
                 let ok = await Reminders.requestAndSchedule(hour: model.prefs.reminderHour, minute: model.prefs.reminderMinute)
                 model.updatePrefs { $0.reminderEnabled = ok }
-                if !ok { message = "Уведомления выключены в Настройках iPhone для Word Partners." }
+                if !ok { message = "Уведомления выключены в Настройках iPhone для Kumi." }
             }
         } else {
             Reminders.cancel()
