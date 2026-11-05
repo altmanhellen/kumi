@@ -1,5 +1,5 @@
 import XCTest
-@testable import WordPartners
+@testable import Kumi
 
 final class FSRSTests: XCTestCase {
     let fsrs = FSRS()

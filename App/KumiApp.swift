@@ -1,7 +1,7 @@
 import SwiftUI
 
 @main
-struct WordPartnersApp: App {
+struct KumiApp: App {
     @State private var model = AppModel()
     @Environment(\.scenePhase) private var scenePhase
 
