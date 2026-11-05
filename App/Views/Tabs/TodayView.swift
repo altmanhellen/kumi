@@ -21,6 +21,12 @@ struct TodayView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(WPFont.labelText(dateLine)).font(WPFont.label(26)).foregroundStyle(Palette.muted)
                     ScreenTitle(text: plan.isEmpty ? "Вы молодец!" : "\(plan.total) \(Plural.cards(plan.total)) на сегодня")
+                    if !plan.isEmpty, let praise {
+                        Text(praise)
+                            .font(WPFont.nunito(17, .heavy))
+                            .foregroundStyle(Palette.text)
+                            .padding(.top, 6)
+                    }
                 }
 
                 if let resume = model.session {
@@ -104,6 +110,25 @@ struct TodayView: View {
             .padding(.leading, 22).padding(.vertical, 22).padding(.trailing, 96)
         }
         .accessibilityElement(children: .combine)
+    }
+
+    /// A word of praise as soon as anything was done today, while the plan is still open.
+    private var praise: String? {
+        let t = model.todayStats
+        let done = t.reviews + t.news
+        guard done > 0 else { return nil }
+        let first = [
+            "Отличное начало! Уже \(done) \(Plural.form(done, "фраза", "фразы", "фраз")) сегодня.",
+            "Хороший старт: \(done) \(Plural.form(done, "фраза", "фразы", "фраз")) уже в работе.",
+            "Вы уже занимались сегодня, так держать!",
+        ]
+        let more = [
+            "Здорово идёте: \(done) \(Plural.form(done, "фраза", "фразы", "фраз")) за сегодня!",
+            "Так держать! Ещё немного, и план выполнен.",
+            "Отлично работаете: \(done) \(Plural.form(done, "фраза", "фразы", "фраз")) сегодня.",
+        ]
+        let list = done < 8 ? first : more
+        return list[abs(model.today) % list.count]
     }
 
     private var newSubtitle: String {
