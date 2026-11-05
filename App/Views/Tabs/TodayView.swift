@@ -89,11 +89,11 @@ struct TodayView: View {
     private func planCard(_ plan: DailyPlan) -> some View {
         PatternCard(style: .waves, blobStart: 0.74) {
             VStack(alignment: .leading, spacing: 18) {
-                planRow(plan.reviews.count, plan.reviews.count == 1 ? "повторение" : Plural.reviews(plan.reviews.count),
+                planRow(plan.reviews.count, widest: max(plan.reviews.count, plan.news.count), plan.reviews.count == 1 ? "повторение" : Plural.reviews(plan.reviews.count),
                         plan.reviews.isEmpty ? "сегодня сроков нет" : "подошёл срок, идут первыми")
                 Rectangle().fill(.clear).frame(height: 2)
                     .overlay(DashedDivider.Line().stroke(Palette.ink.opacity(0.35), style: StrokeStyle(lineWidth: 2, dash: [6, 5])))
-                planRow(plan.news.count, plan.news.count == 1 ? "новое выражение" : "новых \(Plural.form(plan.news.count, "выражение", "выражения", "выражений"))",
+                planRow(plan.news.count, widest: max(plan.reviews.count, plan.news.count), plan.news.count == 1 ? "новое выражение" : "новых \(Plural.form(plan.news.count, "выражение", "выражения", "выражений"))",
                         newSubtitle)
             }
             .padding(22)
@@ -107,9 +107,14 @@ struct TodayView: View {
         return topics.isEmpty ? "уровень \(model.prefs.level.rawValue)" : "\(topics) · \(model.prefs.level.rawValue)"
     }
 
-    private func planRow(_ n: Int, _ title: String, _ subtitle: String) -> some View {
+    /// Both rows reserve room for the wider number, so the text starts at the same place.
+    private func planRow(_ n: Int, widest: Int, _ title: String, _ subtitle: String) -> some View {
         HStack(spacing: 14) {
-            Text("\(n)").font(WPFont.rubik(44)).frame(minWidth: 34, alignment: .leading)
+            ZStack(alignment: .leading) {
+                Text(String(repeating: "8", count: String(widest).count)).hidden()
+                Text("\(n)")
+            }
+            .font(WPFont.rubik(44))
             VStack(alignment: .leading, spacing: 0) {
                 Text(title).font(WPFont.nunito(17, .heavy))
                 Text(subtitle).font(WPFont.nunito(14)).foregroundStyle(Palette.inkSoft)
