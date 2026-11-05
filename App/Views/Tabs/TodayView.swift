@@ -56,10 +56,15 @@ struct TodayView: View {
                 LinkButton(title: "или выбрать тему в Каталоге", action: openCatalog)
                     .frame(maxWidth: .infinity)
 
+                // What was already done today stays visible while more of the plan is left.
+                if !plan.isEmpty {
+                    doneCard(plan).padding(.top, 8)
+                }
+
                 expressionOfDay
                     .padding(.top, 8)
 
-                if plan.isEmpty && !model.startedTodayIds.isEmpty {
+                if !model.startedTodayIds.isEmpty {
                     newTodayCard
                 }
             }

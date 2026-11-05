@@ -29,6 +29,17 @@ extension AppModel {
         if args.contains("-wpFresh") && !prefs.onboarded {
             updatePrefs { $0.onboarded = true; $0.level = .c1; $0.topics = ["Общество и новости"] }
         }
+        if args.contains("-wpFirst") && session == nil {
+            startSession(source: .onboarding, reviews: [], news: Array(eligibleNewIds().prefix(3)))
+            while let step = session?.current {
+                switch step.kind {
+                case .intro: answerIntro(alreadyKnown: false)
+                case .recognition: _ = answerRecognition(library[step.itemId]!.phrase); advance()
+                case .production: _ = answerProduction(library[step.itemId]!.gap.answer); advance()
+                }
+            }
+            dismissSummary()
+        }
         if (args.contains("-wpSession") || args.contains("-wpDone")) && session == nil {
             startToday()
             let skip = args.contains("-wpDone") ? 10_000 : (Int(value("-wpStep") ?? "0") ?? 0)
