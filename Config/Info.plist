@@ -11,6 +11,8 @@
 		<string>Nunito-Bold.ttf</string>
 		<string>Nunito-ExtraBold.ttf</string>
 		<string>Nunito-Italic.ttf</string>
+		<string>MarckScript-Regular.ttf</string>
+		<string>Caveat-Bold.ttf</string>
 	</array>
 	<key>UISupportsDocumentBrowser</key>
 	<false/>

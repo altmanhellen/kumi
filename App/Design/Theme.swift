@@ -86,6 +86,27 @@ enum WPFont {
 
     static func handText(_ text: String) -> String { text }
 
+    /// Names of blocks («Продолжить тему», «Выражение дня»). Prototype switch for trying script fonts:
+    /// launch with -wpLabelFont marck|caveat.
+    static var labelFontChoice: String? {
+        let a = ProcessInfo.processInfo.arguments
+        guard let i = a.firstIndex(of: "-wpLabelFont"), i + 1 < a.count else { return nil }
+        return a[i + 1]
+    }
+
+    static func label(_ size: CGFloat) -> Font {
+        switch labelFontChoice {
+        case "marck": .custom("MarckScript-Regular", size: size, relativeTo: .headline)
+        case "caveat": .custom("CaveatRoman-Bold", size: size, relativeTo: .headline)
+        default: hand(size)
+        }
+    }
+
+    /// Caveat's final «г» reaches past its advance width; a trailing no-break space gives it room.
+    static func labelText(_ text: String) -> String {
+        labelFontChoice == "caveat" ? text + "\u{00A0}" : text
+    }
+
     /// Small labels above titles and inside cards: Nunito Italic 400.
     /// 16pt on the welcome screen, 15pt for kickers, 14pt for labels inside cards.
     static func hand(_ size: CGFloat) -> Font {
