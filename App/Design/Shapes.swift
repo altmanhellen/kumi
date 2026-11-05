@@ -140,12 +140,6 @@ struct PatternFill: View {
                     let r = 4 + CGFloat(rng.next() % 5)
                     ctx.fill(Path(ellipseIn: CGRect(x: x - r, y: y - r, width: r * 2, height: r * 2)), with: .color(Color(hex: 0x6F88DB)))
                 }
-                var curve = Path()
-                curve.move(to: CGPoint(x: -20, y: size.height * 0.95))
-                curve.addCurve(to: CGPoint(x: size.width + 10, y: size.height * 0.2),
-                               control1: CGPoint(x: size.width * 0.35, y: size.height * 0.6),
-                               control2: CGPoint(x: size.width * 0.6, y: size.height * 0.75))
-                ctx.stroke(curve, with: .color(Palette.ink), style: StrokeStyle(lineWidth: 2.5, lineCap: .round))
             case .stripes:
                 var y: CGFloat = 14
                 while y < size.height + 10 {
