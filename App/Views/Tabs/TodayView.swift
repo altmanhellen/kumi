@@ -40,6 +40,10 @@ struct TodayView: View {
                         continueCard(topic)
                     }
                 } else {
+                    StartButton(title: model.session == nil ? "Начать занятие" : "Начать заново") {
+                        if model.session != nil { model.closeSession() }
+                        model.startToday()
+                    }
                     planCard(plan)
                     Button { showWhy.toggle() } label: {
                         HStack(alignment: .top, spacing: 8) {
@@ -52,12 +56,6 @@ struct TodayView: View {
                     }
                     .buttonStyle(.plain)
                     .padding(.horizontal, 4)
-
-                    PrimaryButton(title: model.session == nil ? "Начать занятие" : "Начать заново") {
-                        if model.session != nil { model.closeSession() }
-                        model.startToday()
-                    }
-                    .padding(.top, 4)
                 }
 
                 LinkButton(title: "или выбрать тему в Каталоге", action: openCatalog)
@@ -331,5 +329,27 @@ private extension View {
     /// Today cards use the same illustrated card as the Catalog groups.
     func wrapInPatternCard(_ style: PatternStyle, variant: Int) -> some View {
         PatternCard(style: style, variant: variant, blobStart: 0.78) { self }
+    }
+}
+
+/// The main action of the day: saturated orange so it outweighs the plan card above everything else.
+struct StartButton: View {
+    let title: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 10) {
+                Text(title).font(WPFont.rubik(22))
+                Image(systemName: "arrow.right").font(.system(size: 20, weight: .black))
+            }
+            .foregroundStyle(Palette.ink)
+            .lineLimit(1).minimumScaleFactor(0.7)
+            .frame(maxWidth: .infinity, minHeight: 66)
+            .background(Color(hex: 0xF07A3A))
+            .clipShape(TornShape())
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(PressStyle())
     }
 }
