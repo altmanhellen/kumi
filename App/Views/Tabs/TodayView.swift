@@ -19,7 +19,7 @@ struct TodayView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Eyebrow(text: dateLine)
+                    Text(WPFont.labelText(dateLine)).font(WPFont.label(26)).foregroundStyle(Palette.muted)
                     ScreenTitle(text: plan.isEmpty ? "Вы молодец!" : "\(plan.total) \(Plural.cards(plan.total)) на сегодня")
                 }
 

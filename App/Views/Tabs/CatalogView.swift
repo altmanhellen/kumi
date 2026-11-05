@@ -56,13 +56,8 @@ struct CatalogView: View {
                             }
                         }
                     } else {
-                        HStack(alignment: .firstTextBaseline) {
-                            Text("По группе").font(WPFont.rubik(19, false)).foregroundStyle(Palette.text)
-                            Spacer()
-                            Text(level == nil ? "все уровни" : (level == model.prefs.level ? "\(level!.rawValue) · ваш уровень" : level!.rawValue))
-                                .font(WPFont.nunito(13)).foregroundStyle(Palette.muted)
-                        }
-                        .padding(.top, 2)
+                        Text("По группе").font(WPFont.rubik(19, false)).foregroundStyle(Palette.text)
+                            .padding(.top, 2)
                         ForEach(Array(groups.enumerated()), id: \.element) { i, group in
                             NavigationLink(value: CatalogFilter.group(group)) {
                                 GroupCard(title: group, items: levelItems.filter { $0.structureSet == group }, index: i)

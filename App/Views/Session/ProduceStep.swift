@@ -72,15 +72,11 @@ struct ProduceStep: View {
                     .padding(.horizontal, 20)
                     .padding(.bottom, 8)
             } else {
-                VStack(spacing: 2) {
-                    PrimaryButton(title: "Проверить", enabled: !text.trimmingCharacters(in: .whitespaces).isEmpty) { check() }
-                    LinkButton(title: "Не помню — показать ответ") {
-                        result = model.answerProduction("", gaveUp: true)
-                        focused = false
-                    }
-                }
-                .padding(.horizontal, 20)
-                .padding(.bottom, 4)
+                // Extra room above the main button so the hint buttons aren't hit by accident.
+                PrimaryButton(title: "Проверить", enabled: !text.trimmingCharacters(in: .whitespaces).isEmpty) { check() }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 24)
+                    .padding(.bottom, 8)
             }
         }
         .onAppear {

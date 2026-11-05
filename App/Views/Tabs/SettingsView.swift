@@ -17,7 +17,7 @@ struct SettingsView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Eyebrow(text: "Настройки")
+                    Text(WPFont.labelText("Настройки")).font(WPFont.label(26)).foregroundStyle(Palette.muted)
                     ScreenTitle(text: "Как вам удобно")
                 }
                 .padding(.top, 10)
