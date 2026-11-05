@@ -15,12 +15,14 @@ struct ProduceStep: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
+            ScrollViewReader { proxy in
             ScrollView {
                 if let result {
                     ProductionFeedback(item: item, result: result, typed: text)
                         .padding(.top, 16)
                         .padding(.bottom, 12)
                 } else {
+                    // Order keeps the clues above the field, so the keyboard never hides them.
                     VStack(alignment: .leading, spacing: 0) {
                         if step.review {
                             Tag(text: "Повторение · подошёл срок", icon: "clock.arrow.circlepath", fill: Palette.yellow).padding(.top, 18)
@@ -28,10 +30,10 @@ struct ProduceStep: View {
                             Tag(text: "Ещё раз", icon: "arrow.uturn.backward", fill: Palette.peach).padding(.top, 18)
                         }
                         ScreenTitle(text: step.review ? "Вспомните выражение" : "Впишите выражение целиком", size: 29).padding(.top, 14)
-                        Text("Без вариантов: вспомните фразу сами. \(item.gap.answerWordCount) \(Plural.form(item.gap.answerWordCount, "слово", "слова", "слов")).")
-                            .font(WPFont.nunito(15)).foregroundStyle(Palette.muted).padding(.top, 4)
-
-                        sentenceCard.padding(.top, 20)
+                        if !focused {
+                            Text("Без вариантов: вспомните фразу сами. \(item.gap.answerWordCount) \(Plural.form(item.gap.answerWordCount, "слово", "слова", "слов")).")
+                                .font(WPFont.nunito(15)).foregroundStyle(Palette.muted).padding(.top, 4)
+                        }
 
                         Text(item.meaningEn)
                             .font(WPFont.nunito(15))
@@ -39,12 +41,21 @@ struct ProduceStep: View {
                             .padding(.top, 12)
                             .padding(.horizontal, 2)
 
-                        helpers.padding(.top, 12)
+                        helpers.padding(.top, 10)
+
+                        sentenceCard.padding(.top, 14).id("card")
                     }
                     .padding(.bottom, 12)
                 }
             }
+            .onChange(of: focused) { _, on in
+                if on { withAnimation { proxy.scrollTo("card", anchor: .bottom) } }
+            }
+            .onChange(of: hintShown) { _, on in
+                if on { withAnimation { proxy.scrollTo("card", anchor: .bottom) } }
+            }
             .scrollDismissesKeyboard(.interactively)
+            }
             .padding(.horizontal, 20)
 
             if result != nil {
@@ -67,6 +78,11 @@ struct ProduceStep: View {
             text = initialDraft
             #if DEBUG
             let args = ProcessInfo.processInfo.arguments
+            if args.contains("-wpFocus") {
+                text = "raise"
+                model.showHint()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { focused = true }
+            }
             if let i = args.firstIndex(of: "-wpAnswer"), i + 1 < args.count {
                 text = args[i + 1]
                 check()
@@ -81,6 +97,11 @@ struct ProduceStep: View {
         return VStack(alignment: .leading, spacing: 6) {
             if !parts.before.trimmingCharacters(in: .whitespaces).isEmpty {
                 Text(parts.before.trimmingCharacters(in: .whitespaces)).font(WPFont.nunito(21, .semibold))
+            }
+            if hintShown {
+                Text("Первые буквы: \(AnswerChecker.firstLettersHint(item.gap.answer))")
+                    .font(WPFont.nunito(16, .bold)).foregroundStyle(Palette.inkSoft)
+                    .accessibilityLabel("Подсказка: первые буквы \(item.gap.answer.split(separator: " ").compactMap(\.first).map(String.init).joined(separator: ", "))")
             }
             TextField("", text: $text, prompt: Text(hintShown ? AnswerChecker.firstLettersHint(item.gap.answer) : "…").foregroundStyle(Palette.inkSoft.opacity(0.7)))
                 .font(WPFont.rubik(22, false))
@@ -103,10 +124,6 @@ struct ProduceStep: View {
                 .accessibilityHint(item.gap.sentence.replacingOccurrences(of: "___", with: "пропуск"))
             if !parts.after.trimmingCharacters(in: .whitespaces).isEmpty {
                 Text(parts.after.trimmingCharacters(in: .whitespaces)).font(WPFont.nunito(21, .semibold))
-            }
-            if hintShown {
-                Text("Подсказка: \(AnswerChecker.firstLettersHint(item.gap.answer))")
-                    .font(WPFont.nunito(14, .bold)).foregroundStyle(Palette.inkSoft).padding(.top, 2)
             }
         }
         .foregroundStyle(Palette.ink)
@@ -151,7 +168,7 @@ struct ProduceStep: View {
                     .boxOutline(Capsule())
             }
             .buttonStyle(PressStyle())
-            .padding(.top, 12)
+            .padding(.top, 10)
             .accessibilityHint("Ответ с подсказкой засчитывается как трудный")
         }
     }

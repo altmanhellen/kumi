@@ -193,10 +193,12 @@ struct TodayView: View {
                 }
             }
             ForEach(ids.prefix(3)) { item in
-                HStack(spacing: 10) {
+                // The speaker lines up with the bold English phrase, not the middle of the row.
+                HStack(alignment: .firstTextBaseline, spacing: 10) {
                     Button { model.speakEnglish(item.phrase) } label: {
                         Image(systemName: "speaker.wave.2").font(.system(size: 16, weight: .semibold)).frame(width: 40, height: 40)
                     }
+                    .alignmentGuide(.firstTextBaseline) { d in d[VerticalAlignment.center] + 6 }
                     .accessibilityLabel("Послушать: \(item.phrase)")
                     VStack(alignment: .leading, spacing: 0) {
                         Text(item.phrase).font(WPFont.rubik(17, false))
