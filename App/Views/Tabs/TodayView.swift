@@ -40,10 +40,6 @@ struct TodayView: View {
                         continueCard(topic)
                     }
                 } else {
-                    StartButton(title: model.session == nil ? "Начать занятие" : "Начать заново") {
-                        if model.session != nil { model.closeSession() }
-                        model.startToday()
-                    }
                     planCard(plan)
                     Button { showWhy.toggle() } label: {
                         HStack(alignment: .top, spacing: 8) {
@@ -56,6 +52,12 @@ struct TodayView: View {
                     }
                     .buttonStyle(.plain)
                     .padding(.horizontal, 4)
+
+                    StartButton(title: model.session == nil ? "Начать занятие" : "Начать заново") {
+                        if model.session != nil { model.closeSession() }
+                        model.startToday()
+                    }
+                    .padding(.top, 4)
                 }
 
                 LinkButton(title: "или выбрать тему в Каталоге", action: openCatalog)
