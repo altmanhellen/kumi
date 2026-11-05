@@ -14,7 +14,7 @@ enum Reminders {
 
     static func schedule(hour: Int, minute: Int) {
         let content = UNMutableNotificationContent()
-        content.title = "Word Partners"
+        content.title = "Kumi"
         content.body = "Пара минут на выражения: повторения ждут."
         content.sound = .default
         let trigger = UNCalendarNotificationTrigger(dateMatching: DateComponents(hour: hour, minute: minute), repeats: true)

@@ -14,7 +14,10 @@ struct WordPartnersApp: App {
         }
         .onChange(of: scenePhase) { _, phase in
             switch phase {
-            case .active: model.refreshDay()
+            case .active:
+                model.refreshDay()
+                // Re-register the daily reminder so its text follows the current app name.
+                if model.prefs.reminderEnabled { Reminders.schedule(hour: model.prefs.reminderHour, minute: model.prefs.reminderMinute) }
             case .background: model.persistSession()
             default: break
             }
