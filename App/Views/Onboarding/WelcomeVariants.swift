@@ -85,7 +85,15 @@ struct WelcomeMistake: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("Kumi").font(WPFont.rubik(22)).foregroundStyle(Palette.text).padding(.top, 24)
+          ScrollView {
+           VStack(alignment: .leading, spacing: 0) {
+            HStack(alignment: .firstTextBaseline, spacing: 10) {
+                Text("Kumi").font(WPFont.rubik(52)).foregroundStyle(Palette.text)
+                Text("English Collocations").font(WPFont.rubik(16, false)).foregroundStyle(Palette.muted)
+                    .lineLimit(1).minimumScaleFactor(0.7)
+            }
+            .padding(.top, 16)
+            .accessibilityElement(children: .combine)
 
             VStack(alignment: .leading, spacing: 10) {
                 Text("do a mistake")
@@ -96,13 +104,14 @@ struct WelcomeMistake: View {
                 PatternCard(style: .waves, variant: 1, blobStart: 0.78) {
                     Text("make a mistake")
                         .font(WPFont.rubik(36))
+                        .fixedSize(horizontal: false, vertical: true)
                         .padding(.vertical, 22).padding(.leading, 22).padding(.trailing, 70)
                 }
                 .rotationEffect(.degrees(1.5))
             }
-            .padding(.top, 40)
+            .padding(.top, 28)
 
-            ScreenTitle(text: "Говорите как носитель, а не как учебник", size: 30).padding(.top, 34)
+            ScreenTitle(text: "Говорите как носитель, а не как учебник", size: 30).padding(.top, 30)
             Text("Учите слова парами: make a decision, heavy rain, take a break. 3 минуты в день.")
                 .font(WPFont.nunito(17)).foregroundStyle(Palette.secondary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -110,8 +119,10 @@ struct WelcomeMistake: View {
 
             FlowChips(items: ["heavy rain", "take a break", "grave concern", "keep a promise"])
                 .padding(.top, 20)
-
-            Spacer()
+           }
+           .padding(.bottom, 12)
+          }
+          .scrollBounceBehavior(.basedOnSize)
             PrimaryButton(title: "Начать", action: start)
             LinkButton(title: "У меня уже есть прогресс — восстановить", action: restore).frame(maxWidth: .infinity)
         }

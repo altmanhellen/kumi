@@ -55,9 +55,8 @@ extension OnboardingFlow {
         let v = a.firstIndex(of: "-wpWelcome").flatMap { $0 + 1 < a.count ? WelcomeVariant(rawValue: a[$0 + 1]) : nil }
         switch v {
         case .quiz: WelcomeQuiz(start: { path.append(.level) }, restore: { importing = true })
-        case .mistake: WelcomeMistake(start: { path.append(.level) }, restore: { importing = true })
         case .deck: WelcomeDeck(start: { path.append(.level) }, restore: { importing = true })
-        case nil: WelcomeScreen(start: { path.append(.level) }, restore: { importing = true })
+        case .mistake, nil: WelcomeMistake(start: { path.append(.level) }, restore: { importing = true })
         }
     }
 }
