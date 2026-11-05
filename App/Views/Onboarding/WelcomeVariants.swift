@@ -88,7 +88,7 @@ struct WelcomeMistake: View {
           ScrollView {
            VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .firstTextBaseline, spacing: 10) {
-                Text("Kumi").font(WPFont.rubik(52)).foregroundStyle(Palette.text)
+                KumiWordmark(size: 52)
                 Text("English Collocations").font(WPFont.rubik(16, false)).foregroundStyle(Palette.muted)
                     .lineLimit(1).minimumScaleFactor(0.7)
             }
@@ -194,5 +194,19 @@ struct WelcomeDeck: View {
         .padding(.horizontal, 20).padding(.bottom, 8)
         .screenBackground()
         .toolbar(.hidden, for: .navigationBar)
+    }
+}
+
+/// The app name with each letter in one of the app's pattern colours.
+struct KumiWordmark: View {
+    var size: CGFloat = 52
+    private let letters: [(String, Color)] = [
+        ("K", Color(hex: 0xF07A3A)), ("u", Color(hex: 0x3A6FD0)), ("m", Color(hex: 0x2FA39A)), ("i", Color(hex: 0x9B6BE0)),
+    ]
+
+    var body: some View {
+        letters.reduce(Text("")) { $0 + Text($1.0).foregroundColor($1.1) }
+            .font(WPFont.rubik(size))
+            .accessibilityLabel("Kumi")
     }
 }
