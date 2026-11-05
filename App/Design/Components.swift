@@ -36,6 +36,9 @@ struct PrimaryButton: View {
         Button(action: action) {
             Text(title)
                 .font(WPFont.rubik(19, false, relativeTo: .headline))
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+                .padding(.horizontal, 18)
                 .foregroundStyle(enabled ? Palette.primaryText : Color(hex: 0xF4EDDC))
                 .frame(maxWidth: .infinity, minHeight: height)
                 .background(enabled ? Palette.primaryFill : Palette.disabled)
@@ -374,5 +377,17 @@ struct RadioDot: View {
 extension View {
     func screenBackground() -> some View {
         background(Palette.background.ignoresSafeArea())
+    }
+}
+
+/// Short labels in narrow tiles: one word per line, a word shrinks instead of breaking in the middle.
+struct WordLines: View {
+    let text: String
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            ForEach(Array(text.split(separator: " ").enumerated()), id: \.offset) { _, w in
+                Text(String(w)).lineLimit(1).minimumScaleFactor(0.6)
+            }
+        }
     }
 }

@@ -499,6 +499,7 @@ struct ExpressionSheet: View {
         }
         .screenBackground()
         .presentationDragIndicator(.visible)
+        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
     }
 }
 
@@ -635,5 +636,6 @@ struct LimitSheet: View {
                         .mask(Rectangle().frame(height: 30).frame(maxHeight: .infinity, alignment: .top))
                 }
         }
+        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
     }
 }

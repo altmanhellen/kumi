@@ -9,6 +9,9 @@ struct KumiApp: App {
         WindowGroup {
             RootView()
                 .environment(model)
+                // Text grows with the system setting up to the largest standard size; the accessibility
+                // sizes beyond that would break the hand-drawn cards.
+                .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                 .preferredColorScheme(model.prefs.theme == .system ? nil : (model.prefs.theme == .dark ? .dark : .light))
                 .tint(Palette.blue)
         }
@@ -49,6 +52,7 @@ struct RootView: View {
         .fullScreenCover(isPresented: $model.showingSession) {
             SessionView()
                 .environment(model)
+                .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
         }
     }
 }
@@ -97,6 +101,7 @@ struct TabBar: View {
         }
         .padding(.horizontal, 16)
         .padding(.top, 7)
+        .dynamicTypeSize(...DynamicTypeSize.large)
         .background(Palette.background.ignoresSafeArea(edges: .bottom))
         .overlay(alignment: .top) { Rectangle().fill(Palette.navBorder).frame(height: scheme == .dark ? 1 : 1.5) }
     }
@@ -115,6 +120,7 @@ struct TabBar: View {
                 }
                 .frame(height: 26)
                 Text(title).font(WPFont.nunito(11, on ? .heavy : .bold, relativeTo: .caption2))
+                    .lineLimit(1).minimumScaleFactor(0.7)
             }
             .foregroundStyle(on ? Palette.text : Palette.muted)
             .frame(maxWidth: .infinity, minHeight: 48)

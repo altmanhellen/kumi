@@ -382,6 +382,9 @@ struct PrimaryButtonInk: View {
         Button(action: action) {
             Text(title)
                 .font(WPFont.rubik(19, false, relativeTo: .headline))
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+                .padding(.horizontal, 18)
                 .foregroundStyle(Color(hex: 0xF4EDDC))
                 .frame(maxWidth: .infinity, minHeight: 58)
                 .background(Palette.ink)

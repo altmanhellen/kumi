@@ -82,8 +82,8 @@ struct SummaryView: View {
 
     private func stat(_ n: Int, _ label: String, _ fill: Color, _ i: Int) -> some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text("\(n)").font(WPFont.rubik(30))
-            Text(label).font(WPFont.nunito(14, .bold)).fixedSize(horizontal: false, vertical: true)
+            Text("\(n)").font(WPFont.rubik(30)).lineLimit(1).minimumScaleFactor(0.6)
+            WordLines(text: label).font(WPFont.nunito(14, .bold))
             Spacer(minLength: 0)
         }
         .foregroundStyle(Palette.ink)

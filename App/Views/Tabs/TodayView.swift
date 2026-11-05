@@ -96,8 +96,7 @@ struct TodayView: View {
                 planRow(plan.news.count, widest: max(plan.reviews.count, plan.news.count), plan.news.count == 1 ? "новое выражение" : "новых \(Plural.form(plan.news.count, "выражение", "выражения", "выражений"))",
                         newSubtitle)
             }
-            .padding(22)
-            .frame(width: 250, alignment: .leading)
+            .padding(.leading, 22).padding(.vertical, 22).padding(.trailing, 96)
         }
         .accessibilityElement(children: .combine)
     }
@@ -115,8 +114,10 @@ struct TodayView: View {
                 Text("\(n)")
             }
             .font(WPFont.rubik(44))
+            .lineLimit(1)
+            .fixedSize()
             VStack(alignment: .leading, spacing: 0) {
-                Text(title).font(WPFont.nunito(17, .heavy))
+                WordLines(text: title).font(WPFont.nunito(17, .heavy))
                 Text(subtitle).font(WPFont.nunito(14)).foregroundStyle(Palette.inkSoft)
             }
         }
@@ -144,7 +145,7 @@ struct TodayView: View {
                     HStack {
                         Text(row.0).font(WPFont.nunito(15, .bold))
                         Spacer()
-                        Text(row.1).font(WPFont.rubik(18))
+                        Text(row.1).font(WPFont.rubik(18)).lineLimit(1).fixedSize()
                     }
                     .frame(minHeight: 40)
                     .accessibilityElement(children: .combine)
@@ -290,6 +291,7 @@ struct ReminderOffer: View {
         }
         .padding(24)
         .screenBackground()
+        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
     }
 }
 
