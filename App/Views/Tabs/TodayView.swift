@@ -20,12 +20,13 @@ struct TodayView: View {
             VStack(alignment: .leading, spacing: 16) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(WPFont.labelText(dateLine)).font(WPFont.label(26)).foregroundStyle(Palette.muted)
-                    ScreenTitle(text: plan.isEmpty ? "Вы молодец!" : "\(plan.total) \(Plural.cards(plan.total)) на сегодня")
-                    if !plan.isEmpty, let praise {
-                        Text(praise)
+                    // The big line cheers the user on; the size of today's plan sits under it.
+                    ScreenTitle(text: plan.isEmpty ? "Вы молодец!" : headline)
+                    if !plan.isEmpty {
+                        Text(planLine(plan))
                             .font(WPFont.nunito(17, .heavy))
                             .foregroundStyle(Palette.text)
-                            .padding(.top, 6)
+                            .padding(.top, 4)
                     }
                 }
 
@@ -112,28 +113,24 @@ struct TodayView: View {
         .accessibilityElement(children: .combine)
     }
 
-    /// A line under the title while the plan is open: motivation before the first answer, praise after.
-    private var praise: String? {
+    /// Short motivation before the first answer of the day, short praise after it. Changes daily.
+    private var headline: String {
         let t = model.todayStats
         let done = t.reviews + t.news
-        let start = [
-            "Пара минут — и день засчитан.",
-            "Начните с одной фразы, дальше пойдёт легче.",
-            "Каждая фраза сегодня — на шаг ближе к живой речи.",
-        ]
-        if done == 0 { return start[abs(model.today) % start.count] }
-        let first = [
-            "Отличное начало! Уже \(done) \(Plural.form(done, "фраза", "фразы", "фраз")) сегодня.",
-            "Хороший старт: \(done) \(Plural.form(done, "фраза", "фразы", "фраз")) уже в работе.",
-            "Вы уже занимались сегодня, так держать!",
-        ]
-        let more = [
-            "Здорово идёте: \(done) \(Plural.form(done, "фраза", "фразы", "фраз")) за сегодня!",
-            "Так держать! Ещё немного, и план выполнен.",
-            "Отлично работаете: \(done) \(Plural.form(done, "фраза", "фразы", "фраз")) сегодня.",
-        ]
-        let list = done < 8 ? first : more
+        let list: [String]
+        switch done {
+        case 0: list = ["Поехали!", "Начнём?", "Пара минут — и готово"]
+        case ..<8: list = ["Отличное начало!", "Хороший старт!", "Так держать!"]
+        default: list = ["Здорово идёте!", "Отлично работаете!", "Почти у цели!"]
+        }
         return list[abs(model.today) % list.count]
+    }
+
+    private func planLine(_ plan: DailyPlan) -> String {
+        let t = model.todayStats
+        let done = t.reviews + t.news
+        let left = "\(plan.total) \(Plural.cards(plan.total)) на сегодня"
+        return done == 0 ? left : "Уже \(done) \(Plural.form(done, "фраза", "фразы", "фраз")), ещё \(plan.total) \(Plural.form(plan.total, "карточка", "карточки", "карточек"))"
     }
 
     private var newSubtitle: String {

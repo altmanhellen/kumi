@@ -370,7 +370,7 @@ struct PrefsScreen: View {
                 .padding(.trailing, 3)
             }
             PrimaryButton(title: "Первое занятие · 3 карточки") { finish() }
-            LinkButton(title: "Пропустить") { finish() }.frame(maxWidth: .infinity)
+            LinkButton(title: "Пропустить") { model.updatePrefs { $0.onboarded = true } }.frame(maxWidth: .infinity)
         }
         .padding(.horizontal, 20)
         .padding(.bottom, 4)
