@@ -307,7 +307,7 @@ struct GroupDetailView: View {
         let ids = items.map(\.id)
         let counts = model.counts(for: ids)
         let newCount = counts[.new] ?? 0
-        let startedCount = ids.count - newCount
+        let dueIds = ids.filter { model.card($0).isDue(on: model.today) }
         VStack(spacing: 0) {
             header(counts: counts, total: ids.count)
             LazyVGrid(columns: [GridItem(.flexible(), alignment: .leading), GridItem(.flexible(), alignment: .leading)], spacing: 6) {
@@ -345,9 +345,10 @@ struct GroupDetailView: View {
                             if model.remainingNewToday() == 0 { overLimit = true } else { learn() }
                         }
                     }
-                    if startedCount > 0 {
-                        LinkButton(title: "Потренироваться · \(startedCount) \(Plural.form(startedCount, "начатое", "начатых", "начатых"))") {
-                            model.startPractice(title: filter.title, ids: ids)
+                    // Only when something in this topic is due today: practice then counts as the review.
+                    if !dueIds.isEmpty {
+                        LinkButton(title: "Тренироваться") {
+                            model.startPractice(title: filter.title, ids: dueIds)
                         }
                     }
                 }
