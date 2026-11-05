@@ -22,7 +22,6 @@ struct ProduceStep: View {
                         .padding(.top, 16)
                         .padding(.bottom, 12)
                 } else {
-                    // Order keeps the clues above the field, so the keyboard never hides them.
                     VStack(alignment: .leading, spacing: 0) {
                         if step.review {
                             Tag(text: "Повторение · подошёл срок", icon: "clock.arrow.circlepath", fill: Palette.yellow).padding(.top, 18)
@@ -30,10 +29,10 @@ struct ProduceStep: View {
                             Tag(text: "Ещё раз", icon: "arrow.uturn.backward", fill: Palette.peach).padding(.top, 18)
                         }
                         ScreenTitle(text: step.review ? "Вспомните выражение" : "Впишите выражение целиком", size: 29).padding(.top, 14)
-                        if !focused {
-                            Text("Без вариантов: вспомните фразу сами. \(item.gap.answerWordCount) \(Plural.form(item.gap.answerWordCount, "слово", "слова", "слов")).")
-                                .font(WPFont.nunito(15)).foregroundStyle(Palette.muted).padding(.top, 4)
-                        }
+                        Text("Вспомните фразу самостоятельно.")
+                            .font(WPFont.nunito(15)).foregroundStyle(Palette.muted).padding(.top, 4)
+
+                        sentenceCard.padding(.top, 18)
 
                         Text(item.meaningEn)
                             .font(WPFont.nunito(15))
@@ -41,18 +40,28 @@ struct ProduceStep: View {
                             .padding(.top, 12)
                             .padding(.horizontal, 2)
 
-                        helpers.padding(.top, 10)
+                        if translationShown {
+                            Text(item.gap.hintRu)
+                                .font(WPFont.nunito(15, .semibold))
+                                .foregroundStyle(Palette.text)
+                                .padding(.top, 4)
+                                .padding(.horizontal, 2)
+                        }
 
-                        sentenceCard.padding(.top, 14).id("card")
+                        helpers.padding(.top, 12).id("tools")
                     }
                     .padding(.bottom, 12)
                 }
             }
             .onChange(of: focused) { _, on in
-                if on { withAnimation { proxy.scrollTo("card", anchor: .bottom) } }
+                // Wait for the keyboard to finish resizing the screen, then bring the clues into view.
+                guard on else { return }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                    withAnimation { proxy.scrollTo("tools", anchor: .bottom) }
+                }
             }
             .onChange(of: hintShown) { _, on in
-                if on { withAnimation { proxy.scrollTo("card", anchor: .bottom) } }
+                if on { withAnimation { proxy.scrollTo("tools", anchor: .bottom) } }
             }
             .scrollDismissesKeyboard(.interactively)
             }
@@ -139,38 +148,33 @@ struct ProduceStep: View {
         .cardOutline(WobblyRect(variant: 2))
     }
 
-    @ViewBuilder
+    /// Two small buttons under the meaning: show the translation, show the first letters.
     private var helpers: some View {
-        if model.prefs.showTranslation {
-            HStack(spacing: 10) {
-                Image(systemName: translationShown ? "eye" : "eye.slash").font(.system(size: 15, weight: .semibold))
-                Text(translationShown ? item.gap.hintRu : "Перевод скрыт до ответа")
-                    .font(WPFont.nunito(15)).foregroundStyle(Palette.muted)
-                Spacer()
-                if !translationShown {
-                    Button("Показать") { model.showTranslation() }
-                        .font(WPFont.nunito(15, .heavy)).underline().foregroundStyle(Palette.text).frame(minHeight: 40)
+        HStack(spacing: 10) {
+            if model.prefs.showTranslation {
+                toolButton("Перевод", icon: translationShown ? "eye" : "eye.slash", done: translationShown) {
+                    model.showTranslation()
                 }
             }
-            .foregroundStyle(Palette.muted)
-            .padding(.leading, 14).padding(.trailing, 8)
-            .frame(minHeight: 48)
-            .overlay(RoundedRectangle(cornerRadius: 10).stroke(Palette.muted, style: StrokeStyle(lineWidth: 2, dash: [6, 4])))
+            toolButton("Подсказка", icon: "lightbulb", done: hintShown) { model.showHint() }
+                .accessibilityHint("Покажет первые буквы. Ответ с подсказкой засчитывается как трудный")
         }
-        if !hintShown {
-            Button { model.showHint() } label: {
-                Text("Подсказка: первые буквы")
-                    .font(WPFont.nunito(15, .heavy))
-                    .foregroundStyle(Palette.text)
-                    .padding(.horizontal, 14)
-                    .frame(minHeight: 44)
-                    .background(Palette.paper, in: Capsule())
-                    .boxOutline(Capsule())
+    }
+
+    private func toolButton(_ title: String, icon: String, done: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 6) {
+                Image(systemName: icon).font(.system(size: 14, weight: .semibold))
+                Text(title).font(WPFont.nunito(15, .heavy))
             }
-            .buttonStyle(PressStyle())
-            .padding(.top, 10)
-            .accessibilityHint("Ответ с подсказкой засчитывается как трудный")
+            .foregroundStyle(done ? Palette.muted : Palette.text)
+            .padding(.horizontal, 14)
+            .frame(maxWidth: .infinity, minHeight: 44)
+            .background(Palette.paper, in: Capsule())
+            .boxOutline(Capsule())
         }
+        .buttonStyle(PressStyle())
+        .disabled(done)
     }
 
     private func check() {
