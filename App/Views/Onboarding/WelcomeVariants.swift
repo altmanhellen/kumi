@@ -84,56 +84,137 @@ struct WelcomeMistake: View {
     let restore: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-          ScrollView {
-           VStack(alignment: .leading, spacing: 0) {
-            HStack(alignment: .firstTextBaseline, spacing: 10) {
-                KumiWordmark(size: 52)
-                Text("English Collocations").font(WPFont.rubik(16, false)).foregroundStyle(Palette.muted)
-                    .lineLimit(1).minimumScaleFactor(0.7)
-            }
-            .padding(.top, 16)
-            .accessibilityElement(children: .combine)
+        VStack(spacing: 0) {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    header.frame(maxWidth: .infinity).padding(.top, 14)
 
-            VStack(alignment: .leading, spacing: 10) {
-                Text("do a mistake")
-                    .font(WPFont.rubik(34, false))
-                    .strikethrough(true, color: Color(hex: 0xC8452F))
-                    .foregroundStyle(Palette.muted)
-                    .rotationEffect(.degrees(-3))
-                PatternCard(style: .waves, variant: 1, blobStart: 0.78) {
-                    Text("make a mistake")
-                        .font(WPFont.rubik(36))
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Говорите как").font(WPFont.rubik(36)).foregroundStyle(Palette.text)
+                        HStack(spacing: 10) {
+                            Text("носитель")
+                                .font(WPFont.rubik(40))
+                                .foregroundStyle(Palette.ink)
+                                .padding(.horizontal, 18).padding(.vertical, 2)
+                                .background(Color(hex: 0xF6CF47), in: Capsule())
+                                .rotationEffect(.degrees(-1.5))
+                            Sparks().frame(width: 30, height: 40)
+                        }
+                    }
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, 26)
+                    .accessibilityElement(children: .combine)
+
+                    Text("Учите слова парами и используйте естественные сочетания в речи.")
+                        .font(WPFont.nunito(17)).foregroundStyle(Palette.muted)
                         .fixedSize(horizontal: false, vertical: true)
-                        .padding(.vertical, 22).padding(.leading, 22).padding(.trailing, 70)
+                        .padding(.top, 14)
+
+                    mistakeCard.padding(.top, 28)
+
+                    FlowChips(items: ["heavy rain", "take a break", "grave concern", "keep a promise"], outlined: false)
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 26)
                 }
-                .rotationEffect(.degrees(1.5))
+                .padding(.bottom, 12)
             }
-            .padding(.top, 28)
+            .scrollBounceBehavior(.basedOnSize)
 
-            ScreenTitle(text: "Говорите как носитель, а не как учебник", size: 30).padding(.top, 30)
-            Text("Учите слова парами: make a decision, heavy rain, take a break. 3 минуты в день.")
-                .font(WPFont.nunito(17)).foregroundStyle(Palette.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(.top, 10)
+            HStack(spacing: 8) {
+                ForEach(0..<4, id: \.self) { i in
+                    Circle().fill(i == 0 ? Color(hex: 0xF6CF47) : Palette.muted.opacity(0.5)).frame(width: 9, height: 9)
+                }
+            }
+            .padding(.vertical, 12)
+            .accessibilityHidden(true)
 
-            FlowChips(items: ["heavy rain", "take a break", "grave concern", "keep a promise"])
-                .padding(.top, 20)
-           }
-           .padding(.bottom, 12)
-          }
-          .scrollBounceBehavior(.basedOnSize)
-            PrimaryButton(title: "Начать", action: start)
+            Button(action: start) {
+                ZStack {
+                    Text("Начать").font(WPFont.rubik(22))
+                    HStack { Spacer(); Image(systemName: "arrow.right").font(.system(size: 20, weight: .bold)) }
+                        .padding(.trailing, 24)
+                }
+                .foregroundStyle(Palette.ink)
+                .frame(maxWidth: .infinity, minHeight: 60)
+                .background(Color(hex: 0xF6CF47), in: RoundedRectangle(cornerRadius: 30))
+            }
+            .buttonStyle(PressStyle())
             LinkButton(title: "У меня уже есть прогресс — восстановить", action: restore).frame(maxWidth: .infinity)
         }
         .padding(.horizontal, 20).padding(.bottom, 8)
         .screenBackground()
         .toolbar(.hidden, for: .navigationBar)
     }
+
+    private var header: some View {
+        HStack(spacing: 14) {
+            KumiWordmark(size: 48)
+            Rectangle().fill(Palette.muted.opacity(0.5)).frame(width: 1.5, height: 40)
+            VStack(alignment: .leading, spacing: 0) {
+                Text("English")
+                Text("Collocations")
+            }
+            .font(WPFont.rubik(16, false))
+            .foregroundStyle(Palette.muted)
+        }
+        .accessibilityElement(children: .combine)
+    }
+
+    private var mistakeCard: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 22)
+                .fill(Palette.blue)
+                .rotationEffect(.degrees(-6))
+                .offset(x: -12, y: 14)
+            VStack(alignment: .leading, spacing: 6) {
+                Text("do a mistake")
+                    .font(WPFont.rubik(24, false))
+                    .strikethrough(true, color: Color(hex: 0xE0533A))
+                    .foregroundStyle(Palette.inkSoft.opacity(0.7))
+                Text("make a mistake")
+                    .font(WPFont.rubik(40))
+                    .foregroundStyle(Palette.ink)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding(.vertical, 24).padding(.leading, 26).padding(.trailing, 110)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background {
+                ZStack {
+                    PatternStyle.waves.base
+                    PatternFill(style: .waves).clipShape(SideBlob(start: 0.7, variant: 1))
+                }
+                .clipShape(RoundedRectangle(cornerRadius: 22))
+            }
+            .rotationEffect(.degrees(-1.5))
+        }
+        .padding(.horizontal, 4)
+        .accessibilityElement()
+        .accessibilityLabel("Не do a mistake, а make a mistake")
+    }
+}
+
+/// Three short strokes beside the highlighted word, like a doodle.
+struct Sparks: View {
+    var body: some View {
+        Canvas { ctx, size in
+            let c = Color(hex: 0xF6CF47)
+            let lines: [(CGPoint, CGPoint)] = [
+                (CGPoint(x: 4, y: size.height * 0.2), CGPoint(x: size.width - 4, y: size.height * 0.05)),
+                (CGPoint(x: 6, y: size.height * 0.5), CGPoint(x: size.width - 2, y: size.height * 0.5)),
+                (CGPoint(x: 4, y: size.height * 0.8), CGPoint(x: size.width - 6, y: size.height * 0.98)),
+            ]
+            for (a, b) in lines {
+                var p = Path(); p.move(to: a); p.addLine(to: b)
+                ctx.stroke(p, with: .color(c), style: StrokeStyle(lineWidth: 5, lineCap: .round))
+            }
+        }
+        .accessibilityHidden(true)
+    }
 }
 
 struct FlowChips: View {
     let items: [String]
+    var outlined = true
     private let fills: [Color] = [Palette.yellow, Palette.peach, Palette.lilac, Palette.teal]
 
     var body: some View {
@@ -142,11 +223,11 @@ struct FlowChips: View {
                 HStack(spacing: 8) {
                     ForEach(i..<min(i + 2, items.count), id: \.self) { k in
                         Text(items[k])
-                            .font(WPFont.rubik(16, false))
+                            .font(WPFont.rubik(outlined ? 16 : 19, false))
                             .foregroundStyle(Palette.ink)
-                            .padding(.horizontal, 14).frame(minHeight: 38)
+                            .padding(.horizontal, outlined ? 14 : 18).frame(minHeight: outlined ? 38 : 46)
                             .background(fills[k % fills.count], in: Capsule())
-                            .fillOutline(Capsule())
+                            .modifier(BoxOutline(shape: Capsule(), color: Palette.ink, light: outlined ? 2.5 : 0, dark: 0))
                             .rotationEffect(.degrees(k % 2 == 0 ? -2 : 2))
                     }
                 }
