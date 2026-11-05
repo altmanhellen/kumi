@@ -112,11 +112,16 @@ struct TodayView: View {
         .accessibilityElement(children: .combine)
     }
 
-    /// A word of praise as soon as anything was done today, while the plan is still open.
+    /// A line under the title while the plan is open: motivation before the first answer, praise after.
     private var praise: String? {
         let t = model.todayStats
         let done = t.reviews + t.news
-        guard done > 0 else { return nil }
+        let start = [
+            "Пара минут — и день засчитан.",
+            "Начните с одной фразы, дальше пойдёт легче.",
+            "Каждая фраза сегодня — на шаг ближе к живой речи.",
+        ]
+        if done == 0 { return start[abs(model.today) % start.count] }
         let first = [
             "Отличное начало! Уже \(done) \(Plural.form(done, "фраза", "фразы", "фраз")) сегодня.",
             "Хороший старт: \(done) \(Plural.form(done, "фраза", "фразы", "фраз")) уже в работе.",
