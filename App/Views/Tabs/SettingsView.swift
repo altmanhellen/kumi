@@ -28,10 +28,6 @@ struct SettingsView: View {
                         SettingsRow(title: "Английский", subtitle: "выражения и примеры", value: model.englishVoiceName)
                     }
                     DashedDivider()
-                    NavigationLink { VoicePicker(language: .russian) } label: {
-                        SettingsRow(title: "Русский", subtitle: "переводы", value: model.russianVoiceName)
-                    }
-                    DashedDivider()
                     Menu {
                         ForEach([0.5, 0.6, 0.7, 0.8], id: \.self) { r in
                             Button(String(format: "%.1f×", r)) { model.updatePrefs { $0.slowRate = r } }
