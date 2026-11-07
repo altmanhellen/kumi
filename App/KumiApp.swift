@@ -3,12 +3,15 @@ import SwiftUI
 @main
 struct KumiApp: App {
     @State private var model = AppModel()
+    @State private var store = Store()
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some Scene {
         WindowGroup {
             RootView()
                 .environment(model)
+                .environment(store)
+                .task { store.start(model: model) }
                 // Text grows with the system setting up to the largest standard size; the accessibility
                 // sizes beyond that would break the hand-drawn cards.
                 .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
@@ -40,7 +43,7 @@ struct RootView: View {
             if model.prefs.onboarded {
                 MainTabs(tab: $tab)
             } else {
-                OnboardingFlow()
+                OnboardingFlow { tab = $0 }
             }
         }
         #if DEBUG
@@ -49,6 +52,10 @@ struct RootView: View {
             if let t = AppModel.debugTab { tab = t }
         }
         #endif
+        .sheet(isPresented: $model.showPaywall) {
+            PaywallView()
+                .presentationDetents([.large])
+        }
         .fullScreenCover(isPresented: $model.showingSession) {
             SessionView()
                 .environment(model)
@@ -60,6 +67,8 @@ struct RootView: View {
 struct MainTabs: View {
     @Environment(AppModel.self) private var model
     @Binding var tab: MainTab
+    /// Tapping the open tab again returns it to its first screen, as in other iOS apps.
+    @State private var resets: [MainTab: Int] = [:]
 
     var body: some View {
         VStack(spacing: 0) {
@@ -71,16 +80,18 @@ struct MainTabs: View {
                 .toolbar(.hidden, for: .tabBar)
                 .tag(MainTab.today)
             CatalogView()
+                .id(resets[.catalog, default: 0])
                 .toolbar(.hidden, for: .tabBar)
                 .tag(MainTab.catalog)
             ProgressScreen()
                 .toolbar(.hidden, for: .tabBar)
                 .tag(MainTab.progress)
             NavigationStack { SettingsView() }
+                .id(resets[.settings, default: 0])
                 .toolbar(.hidden, for: .tabBar)
                 .tag(MainTab.settings)
         }
-        TabBar(tab: $tab)
+        TabBar(tab: $tab) { resets[$0, default: 0] += 1 }
         }
         .ignoresSafeArea(.keyboard)
     }
@@ -90,6 +101,7 @@ struct MainTabs: View {
 struct TabBar: View {
     @Environment(\.colorScheme) private var scheme
     @Binding var tab: MainTab
+    var reselect: (MainTab) -> Void = { _ in }
     @Environment(AppModel.self) private var model
 
     var body: some View {
@@ -109,7 +121,7 @@ struct TabBar: View {
     private func item(_ t: MainTab, _ title: String, _ icon: String, _ fill: Color) -> some View {
         let on = tab == t
         return Button {
-            tab = t
+            if tab == t { reselect(t) } else { tab = t }
         } label: {
             VStack(spacing: 3) {
                 ZStack {

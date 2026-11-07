@@ -72,6 +72,7 @@ struct CatalogView: View {
             }
             .scrollDismissesKeyboard(.immediately)
             .screenBackground()
+            .statusBarBackdrop()
             .toolbar(.hidden, for: .navigationBar)
             .navigationDestination(for: CatalogFilter.self) { filter in
                 GroupDetailView(filter: filter, level: level)
@@ -461,17 +462,21 @@ struct ExpressionSheet: View {
                             .font(.system(size: 20, weight: .semibold)).foregroundStyle(Palette.text).frame(width: 44, height: 44)
                     }
                     .accessibilityLabel(model.isFavorite(item.id) ? "Убрать из избранного" : "Добавить в избранное")
+                    Button { dismiss() } label: {
+                        Image(systemName: "xmark").font(.system(size: 17, weight: .bold)).foregroundStyle(Palette.text).frame(width: 44, height: 44)
+                    }
+                    .accessibilityLabel("Закрыть")
+                    .padding(.trailing, -10)
                 }
-                PatternCard(style: .waves, variant: 1, blobStart: 0.78) {
+                PatternCard(style: .waves, variant: 1, blobStart: 0.78, clearBlob: true) {
                     VStack(alignment: .leading, spacing: 12) {
-                        Text(item.phrase).font(WPFont.rubik(32)).fixedSize(horizontal: false, vertical: true)
+                        PhraseTitle(text: item.phrase, size: 32)
                         HStack(spacing: 10) {
                             ListenPill(title: "Слушать") { model.speakEnglish(item.phrase) }
                             SlowPill(rate: model.prefs.slowRate) { model.speakEnglish(item.phrase, slow: true) }
                         }
                     }
-                    .padding(20)
-                    .frame(width: 270, alignment: .leading)
+                    .padding(.leading, 20).padding(.vertical, 20)
                 }
                 VStack(alignment: .leading, spacing: 4) {
                     Text(WPFont.labelText("Значение")).font(WPFont.label(22)).foregroundStyle(Palette.muted)

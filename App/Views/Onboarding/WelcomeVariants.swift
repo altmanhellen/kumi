@@ -128,17 +128,7 @@ struct WelcomeMistake: View {
             .padding(.vertical, 12)
             .accessibilityHidden(true)
 
-            Button(action: start) {
-                ZStack {
-                    Text("Начать").font(WPFont.rubik(22))
-                    HStack { Spacer(); Image(systemName: "arrow.right").font(.system(size: 20, weight: .bold)) }
-                        .padding(.trailing, 24)
-                }
-                .foregroundStyle(Palette.ink)
-                .frame(maxWidth: .infinity, minHeight: 60)
-                .background(Color(hex: 0xF6CF47), in: RoundedRectangle(cornerRadius: 30))
-            }
-            .buttonStyle(PressStyle())
+            CoralButton(title: "Начать", action: start)
             LinkButton(title: "У меня уже есть прогресс — восстановить", action: restore).frame(maxWidth: .infinity)
         }
         .padding(.horizontal, 20).padding(.bottom, 8)
@@ -150,11 +140,11 @@ struct WelcomeMistake: View {
         HStack(spacing: 14) {
             KumiWordmark(size: 48)
             Rectangle().fill(Palette.muted.opacity(0.5)).frame(width: 1.5, height: 40)
-            VStack(alignment: .leading, spacing: 0) {
+            VStack(alignment: .leading, spacing: -4) {
                 Text("English")
-                Text("Collocations")
+                Text(WPFont.labelText("Collocations"))
             }
-            .font(WPFont.rubik(16, false))
+            .font(WPFont.label(24))
             .foregroundStyle(Palette.muted)
         }
         .accessibilityElement(children: .combine)

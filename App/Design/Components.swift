@@ -6,11 +6,17 @@ struct PatternCard<Content: View>: View {
     var style: PatternStyle
     var variant = 0
     var blobStart: CGFloat = 0.7
+    /// Keeps the content clear of the side pattern at any card width; the content then sets no trailing padding.
+    var clearBlob = false
     @ViewBuilder var content: Content
+    @State private var width: CGFloat = 0
 
     var body: some View {
         content
+            // The blob edge wobbles up to 16 pt to the left of `blobStart`.
+            .padding(.trailing, clearBlob ? width * (1 - blobStart) + 22 : 0)
             .frame(maxWidth: .infinity, alignment: .leading)
+            .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
             .background {
                 ZStack {
                     style.base
@@ -378,6 +384,11 @@ extension View {
     func screenBackground() -> some View {
         background(Palette.background.ignoresSafeArea())
     }
+
+    /// Covers the status bar with the screen colour so scrolled content does not run under the clock.
+    func statusBarBackdrop() -> some View {
+        modifier(StatusBarBackdrop())
+    }
 }
 
 /// Short labels in narrow tiles: one word per line, a word shrinks instead of breaking in the middle.
@@ -401,16 +412,13 @@ struct HighlightTitle: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(lead).font(WPFont.rubik(size)).foregroundStyle(Palette.text)
-            HStack(spacing: 10) {
-                Text(mark)
-                    .font(WPFont.rubik(size + 4))
-                    .foregroundStyle(Palette.ink)
-                    .lineLimit(1).minimumScaleFactor(0.7)
-                    .padding(.horizontal, 16).padding(.vertical, 1)
-                    .background(Color(hex: 0xF6CF47), in: Capsule())
-                    .rotationEffect(.degrees(-1.5))
-                Sparks().frame(width: 28, height: 38)
-            }
+            Text(mark)
+                .font(WPFont.rubik(size + 4))
+                .foregroundStyle(Palette.ink)
+                .lineLimit(1).minimumScaleFactor(0.7)
+                .padding(.horizontal, 16).padding(.vertical, 1)
+                .background(Color(hex: 0xF6CF47), in: Capsule())
+                .rotationEffect(.degrees(-1.5))
         }
         .fixedSize(horizontal: false, vertical: true)
         .accessibilityElement(children: .combine)
@@ -419,22 +427,71 @@ struct HighlightTitle: View {
 }
 
 /// Main onboarding action: a solid yellow pill.
-struct YellowButton: View {
+/// The main call to action: a coral strip of tape with torn ends and a soft glow.
+struct CoralButton: View {
     let title: String
+    var arrow = true
     var enabled = true
+    var height: CGFloat = 62
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
-            Text(title)
-                .font(WPFont.rubik(21))
-                .foregroundStyle(Palette.ink)
-                .lineLimit(1).minimumScaleFactor(0.7)
-                .padding(.horizontal, 18)
-                .frame(maxWidth: .infinity, minHeight: 60)
-                .background(enabled ? Color(hex: 0xF6CF47) : Palette.disabled, in: RoundedRectangle(cornerRadius: 30))
+            HStack(spacing: 10) {
+                Text(title).font(WPFont.rubik(22))
+                if arrow { Image(systemName: "arrow.right").font(.system(size: 20, weight: .black)) }
+            }
+            .foregroundStyle(enabled ? Color(hex: 0xFFF6EA) : Palette.muted)
+            .lineLimit(1).minimumScaleFactor(0.7)
+            .padding(.horizontal, 22)
+            .frame(maxWidth: .infinity, minHeight: height)
+            .background(enabled ? Color(hex: 0xFF6F5B) : Palette.disabled)
+            .clipShape(TapeShape())
+            .shadow(color: Color(hex: 0xFF6F5B).opacity(enabled ? 0.45 : 0), radius: 14)
+            .contentShape(Rectangle())
         }
         .buttonStyle(PressStyle())
         .disabled(!enabled)
+    }
+}
+
+/// Big Rubik phrase that shrinks until its longest word fits on one line, so words never break mid-word.
+struct PhraseTitle: View {
+    let text: String
+    var size: CGFloat = 36
+    @State private var width: CGFloat = 0
+
+    var body: some View {
+        Text(text)
+            .font(WPFont.rubik(fittingSize))
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
+    }
+
+    private var fittingSize: CGFloat {
+        guard width > 0 else { return size }
+        let longest = text.components(separatedBy: " ").max { $0.count < $1.count } ?? text
+        let scaled = UIFontMetrics(forTextStyle: .title1).scaledValue(for: size)
+        guard let font = UIFont(name: "Rubik-ExtraBold", size: scaled) else { return size }
+        let wordWidth = (longest as NSString).size(withAttributes: [.font: font]).width
+        return wordWidth <= width ? size : max(size * width / wordWidth * 0.97, size * 0.6)
+    }
+}
+
+/// A strip of the screen colour behind the status bar, as tall as the top safe area.
+private struct StatusBarBackdrop: ViewModifier {
+    @State private var top: CGFloat = 0
+
+    func body(content: Content) -> some View {
+        content
+            .onGeometryChange(for: CGFloat.self) { $0.safeAreaInsets.top } action: { top = $0 }
+            .overlay(alignment: .top) {
+                Palette.background
+                    .frame(height: top)
+                    .offset(y: -top)
+                    .allowsHitTesting(false)
+                    .accessibilityHidden(true)
+            }
     }
 }

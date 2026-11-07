@@ -1,0 +1,7 @@
+name = "kumi"
+main = "src/index.js"
+compatibility_date = "2026-10-01"
+
+# Lives on its own Cloudflare account (kumi.english.app@gmail.com, subdomain kumi-english).
+# Deploy with that account's login kept apart from Yomi's:
+#   XDG_CONFIG_HOME=$PWD/.cf-home npx wrangler deploy

@@ -46,6 +46,16 @@ final class AppModel {
     var shouldOfferReminder = false
     /// A catalog screen to open when the Catalog tab appears (set from Today).
     var pendingCatalog: CatalogFilter?
+    /// The one-time purchase is on this Apple Account.
+    var isUnlocked = false
+    var showPaywall = false
+
+    /// New expressions anyone can start before buying full access.
+    static let freeNewLimit = 30
+    var startedCount: Int { cards.values.filter { $0.firstSeenDay != nil }.count }
+    /// How many more new expressions can be started; unlimited after the purchase.
+    var freeNewLeft: Int { isUnlocked ? .max : max(Self.freeNewLimit - startedCount, 0) }
+    var paywallReached: Bool { !isUnlocked && freeNewLeft == 0 }
 
     var prefs: Preferences { file.prefs }
     var fsrs: FSRS { FSRS(desiredRetention: file.prefs.desiredRetention) }
@@ -129,7 +139,7 @@ final class AppModel {
         let started = startedTodayIds.count
         let eligible = eligibleNewIds()
         let catchingUp = due.count > prefs.reviewLimit
-        let newCount = catchingUp ? 0 : min(max(prefs.newPerDay - started, 0), eligible.count)
+        let newCount = catchingUp ? 0 : min(max(prefs.newPerDay - started, 0), eligible.count, freeNewLeft)
         return DailyPlan(
             reviews: reviews, news: Array(eligible.prefix(newCount)), dueTotal: due.count,
             startedToday: started, newLimit: prefs.newPerDay, eligibleNew: eligible.count,

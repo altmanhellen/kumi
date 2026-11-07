@@ -39,6 +39,27 @@ struct TornShape: Shape {
     }
 }
 
+/// A strip of tape: torn zigzag ends, slightly uneven top and bottom.
+struct TapeShape: Shape {
+    func path(in r: CGRect) -> Path {
+        let left: [(CGFloat, CGFloat)] = [
+            (0.006, 0.04), (0.022, 0.15), (0.004, 0.27), (0.02, 0.4), (0, 0.52),
+            (0.018, 0.64), (0.003, 0.76), (0.021, 0.88), (0.008, 0.97),
+        ]
+        var pts = [(0.3, 0.012), (0.62, 0.0), (0.99, 0.02)].map { (CGFloat($0.0), CGFloat($0.1)) }
+        pts += left.reversed().map { (1 - $0.0, 1 - $0.1) }
+        pts += [(0.7, 0.99), (0.36, 1), (0.01, 0.985)].map { (CGFloat($0.0), CGFloat($0.1)) }
+        pts += left.reversed()
+        var p = Path()
+        for (i, pt) in pts.enumerated() {
+            let c = CGPoint(x: r.minX + pt.0 * r.width, y: r.minY + pt.1 * r.height)
+            i == 0 ? p.move(to: c) : p.addLine(to: c)
+        }
+        p.closeSubpath()
+        return p
+    }
+}
+
 /// The organic shape on the right side of a card that holds the pattern.
 struct SideBlob: Shape {
     /// Where the blob starts, as a share of the width.

@@ -68,6 +68,10 @@ struct TodayView: View {
                     doneCard(plan).padding(.top, 8)
                 }
 
+                if model.paywallReached {
+                    UnlockCard()
+                }
+
                 expressionOfDay
                     .padding(.top, 8)
 
@@ -80,6 +84,7 @@ struct TodayView: View {
             .padding(.bottom, 24)
         }
         .screenBackground()
+        .statusBarBackdrop()
         .alert("Почему столько карточек", isPresented: $showWhy) {
             Button("Понятно", role: .cancel) {}
         } message: {
@@ -99,7 +104,7 @@ struct TodayView: View {
     }
 
     private func planCard(_ plan: DailyPlan) -> some View {
-        PatternCard(style: .waves, blobStart: 0.74) {
+        PatternCard(style: .waves, blobStart: 0.74, clearBlob: true) {
             VStack(alignment: .leading, spacing: 18) {
                 planRow(plan.reviews.count, widest: max(plan.reviews.count, plan.news.count), plan.reviews.count == 1 ? "повторение" : Plural.reviews(plan.reviews.count),
                         plan.reviews.isEmpty ? "сегодня сроков нет" : "подошёл срок, идут первыми")
@@ -108,7 +113,7 @@ struct TodayView: View {
                 planRow(plan.news.count, widest: max(plan.reviews.count, plan.news.count), plan.news.count == 1 ? "новое выражение" : "новых \(Plural.form(plan.news.count, "выражение", "выражения", "выражений"))",
                         newSubtitle)
             }
-            .padding(.leading, 22).padding(.vertical, 22).padding(.trailing, 96)
+            .padding(.leading, 22).padding(.vertical, 22)
         }
         .accessibilityElement(children: .combine)
     }
@@ -135,7 +140,7 @@ struct TodayView: View {
 
     private var newSubtitle: String {
         let topics = model.prefs.topics.prefix(2).joined(separator: ", ")
-        return topics.isEmpty ? "уровень \(model.prefs.level.rawValue)" : "\(topics) · \(model.prefs.level.rawValue)"
+        return topics.isEmpty ? "уровень \(model.prefs.level.rawValue)" : "\(topics)\u{00A0}·\u{00A0}\(model.prefs.level.rawValue)"
     }
 
     /// Both rows reserve room for the wider number, so the text starts at the same place.
@@ -190,7 +195,7 @@ struct TodayView: View {
                     .frame(minHeight: 44, alignment: .leading)
                 }
             }
-            .padding(.leading, 20).padding(.trailing, 92).padding(.vertical, 16)
+            .padding(.leading, 20).padding(.vertical, 16)
             .wrapInPatternCard(.dots, variant: 1)
         }
     }
@@ -203,11 +208,11 @@ struct TodayView: View {
         return Button { openTopic(topic) } label: {
             VStack(alignment: .leading, spacing: 6) {
                 Text(WPFont.labelText("Продолжить тему")).font(WPFont.label(23)).foregroundStyle(Palette.inkSoft)
-                Text("\(topic) · \(level.rawValue)").font(WPFont.rubik(22)).multilineTextAlignment(.leading)
-                Text("\(fresh) \(Plural.form(fresh, "новое", "новых", "новых")) →").font(WPFont.nunito(15, .heavy))
+                Text("\(topic)\u{00A0}·\u{00A0}\(level.rawValue)").font(WPFont.rubik(22)).multilineTextAlignment(.leading)
+                Text("\(fresh) \(Plural.form(fresh, "новое", "новых", "новых"))\u{00A0}→").font(WPFont.nunito(15, .heavy))
                 StateBar(counts: counts, total: ids.count).padding(.top, 4)
             }
-            .padding(.leading, 20).padding(.trailing, 92).padding(.vertical, 16)
+            .padding(.leading, 20).padding(.vertical, 16)
             .wrapInPatternCard(.waves, variant: 0)
         }
         .buttonStyle(PressStyle())
@@ -241,7 +246,7 @@ struct TodayView: View {
                 }
             }
         }
-        .padding(.leading, 20).padding(.trailing, 92).padding(.vertical, 16)
+        .padding(.leading, 20).padding(.vertical, 16)
         .wrapInPatternCard(.stripes, variant: 2)
         .sheet(isPresented: $showAllNew) {
             NavigationStack {
@@ -330,11 +335,11 @@ struct ReminderOffer: View {
 private extension View {
     /// Today cards use the same illustrated card as the Catalog groups.
     func wrapInPatternCard(_ style: PatternStyle, variant: Int) -> some View {
-        PatternCard(style: style, variant: variant, blobStart: 0.78) { self }
+        PatternCard(style: style, variant: variant, blobStart: 0.78, clearBlob: true) { self }
     }
 }
 
-/// The main action of the day: saturated orange so it outweighs the plan card above everything else.
+/// The main action of the day: a yellow ribbon.
 struct StartButton: View {
     let title: String
     let action: () -> Void
@@ -342,16 +347,36 @@ struct StartButton: View {
     var body: some View {
         Button(action: action) {
             HStack(spacing: 10) {
-                Text(title).font(WPFont.rubik(22))
-                Image(systemName: "arrow.right").font(.system(size: 20, weight: .black))
+                Text(title).font(WPFont.rubik(21))
+                Image(systemName: "arrow.right").font(.system(size: 21, weight: .bold))
             }
             .foregroundStyle(Palette.ink)
             .lineLimit(1).minimumScaleFactor(0.7)
-            .frame(maxWidth: .infinity, minHeight: 66)
-            .background(Color(hex: 0xF07A3A))
-            .clipShape(TornShape())
+            .padding(.horizontal, 24)
+            .frame(maxWidth: .infinity, minHeight: 60)
+            .background(Color(hex: 0xFDDA5A), in: RibbonShape())
+            .fillOutline(RibbonShape())
             .contentShape(Rectangle())
         }
         .buttonStyle(PressStyle())
+    }
+}
+
+/// Yellow ribbon with zigzag ends (designed on a 350×60 box, stretched to the width).
+struct RibbonShape: Shape {
+    func path(in r: CGRect) -> Path {
+        let pts: [(CGFloat, CGFloat)] = [
+            (9, 3), (341, 2), (347, 11), (339, 20), (349, 30), (340, 40), (347, 49), (340, 57),
+            (11, 56), (3, 47), (12, 37), (1, 28), (10, 18), (2, 9),
+        ]
+        var p = Path()
+        for (i, pt) in pts.enumerated() {
+            // Ends keep their size; only the straight middle stretches.
+            let x = pt.0 < 175 ? r.minX + pt.0 : r.maxX - (350 - pt.0)
+            let c = CGPoint(x: x, y: r.minY + pt.1 / 60 * r.height)
+            i == 0 ? p.move(to: c) : p.addLine(to: c)
+        }
+        p.closeSubpath()
+        return p
     }
 }

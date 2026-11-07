@@ -29,6 +29,7 @@ struct ProgressScreen: View {
             #endif
             }
             .screenBackground()
+            .statusBarBackdrop()
             .toolbar(.hidden, for: .navigationBar)
         }
     }

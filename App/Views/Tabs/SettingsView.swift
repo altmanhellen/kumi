@@ -4,6 +4,7 @@ import UniformTypeIdentifiers
 
 struct SettingsView: View {
     @Environment(AppModel.self) private var model
+    @Environment(Store.self) private var store
     @Environment(\.colorScheme) private var scheme
     @Environment(\.dismiss) private var dismiss
     @State private var shareURL: URL?
@@ -108,6 +109,23 @@ struct SettingsView: View {
                     }
                 }
 
+                section("Полный доступ")
+                PaperBox(variant: 2) {
+                    if model.isUnlocked {
+                        SettingsRow(title: "Все 326 выражений открыты", subtitle: "разовая покупка", chevron: false)
+                    } else {
+                        Button { model.showPaywall = true } label: {
+                            SettingsRow(title: "Открыть все выражения", subtitle: "бесплатно открыто \(AppModel.freeNewLimit), начато \(min(model.startedCount, AppModel.freeNewLimit))", value: store.price)
+                        }
+                        .buttonStyle(.plain)
+                        DashedDivider()
+                        Button { Task { await store.restore() } } label: {
+                            SettingsRow(title: "Восстановить покупку", chevron: false)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+
                 section("Аккаунт")
                 PaperBox(variant: 4) {
                     if let acc = model.file.account {
@@ -156,6 +174,7 @@ struct SettingsView: View {
         #endif
         }
         .screenBackground()
+        .statusBarBackdrop()
         .toolbar(.hidden, for: .navigationBar)
         .sheet(item: $shareURL) { url in ShareSheet(items: [url]) }
         .fileImporter(isPresented: $importing, allowedContentTypes: [.json]) { result in
@@ -298,6 +317,7 @@ struct VoicePicker: View {
         .padding(.horizontal, 20)
         .padding(.top, 8)
         .screenBackground()
+        .statusBarBackdrop()
         .toolbar(.hidden, for: .navigationBar)
     }
 
@@ -364,6 +384,7 @@ struct TopicsSettings: View {
             .padding(.horizontal, 20).padding(.top, 8).padding(.bottom, 30)
         }
         .screenBackground()
+        .statusBarBackdrop()
         .toolbar(.hidden, for: .navigationBar)
     }
 }

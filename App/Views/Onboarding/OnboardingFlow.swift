@@ -1,10 +1,11 @@
 import SwiftUI
 import UniformTypeIdentifiers
 
-enum OnboardingStep: Hashable { case level, test, topics, prefs, voices }
+enum OnboardingStep: Hashable { case level, test, topics, prefs, voices, first }
 
 struct OnboardingFlow: View {
     @Environment(AppModel.self) private var model
+    var done: (MainTab) -> Void = { _ in }
     @State var path: [OnboardingStep] = []
     @State var importing = false
     @State private var importError: String?
@@ -17,8 +18,9 @@ struct OnboardingFlow: View {
                         switch step {
                         case .level: LevelScreen(path: $path)
                         case .test: LevelTestScreen(path: $path)
-                        case .topics: TopicsScreen(path: $path)
+                        case .topics: BeigeTopics(back: { path.removeLast() }, next: { path.append(.first) })
                         case .prefs: PrefsScreen(path: $path)
+                        case .first: BeigeExample(back: { path.removeLast() }, done: { finish(.today) })
                         case .voices: VoicePicker(language: .english, onboarding: true)
                         }
                     }
@@ -28,8 +30,11 @@ struct OnboardingFlow: View {
         #if DEBUG
         .onAppear {
             let a = ProcessInfo.processInfo.arguments
+            if let i = a.firstIndex(of: "-wpPickTopics"), i + 1 < a.count {
+                model.updatePrefs { $0.topics = a[i + 1].components(separatedBy: "|") }
+            }
             if let i = a.firstIndex(of: "-wpOnb"), i + 1 < a.count {
-                path = Array([OnboardingStep.level, .topics, .prefs].prefix(Int(a[i + 1]) ?? 1))
+                path = Array([OnboardingStep.topics, .first].prefix(Int(a[i + 1]) ?? 1))
             }
         }
         #endif
@@ -49,6 +54,11 @@ struct OnboardingFlow: View {
 }
 
 extension OnboardingFlow {
+    func finish(_ tab: MainTab) {
+        done(tab)
+        model.updatePrefs { $0.onboarded = true }
+    }
+
     @ViewBuilder
     var welcome: some View {
         let a = ProcessInfo.processInfo.arguments
@@ -56,7 +66,8 @@ extension OnboardingFlow {
         switch v {
         case .quiz: WelcomeQuiz(start: { path.append(.level) }, restore: { importing = true })
         case .deck: WelcomeDeck(start: { path.append(.level) }, restore: { importing = true })
-        case .mistake, nil: WelcomeMistake(start: { path.append(.level) }, restore: { importing = true })
+        case .mistake: WelcomeMistake(start: { path.append(.level) }, restore: { importing = true })
+        case nil: BeigeWelcome(start: { path.append(.topics) }, restore: { importing = true })
         }
     }
 }
@@ -162,7 +173,7 @@ struct LevelScreen: View {
                 .padding(.top, 22)
                 .padding(.bottom, 8)
             }
-            YellowButton(title: "Дальше") { path.append(.topics) }
+            CoralButton(title: "Дальше") { path.append(.topics) }
         }
         .padding(.horizontal, 20)
         .padding(.bottom, 8)
@@ -196,7 +207,7 @@ struct LevelTestScreen: View {
                         .font(WPFont.nunito(16)).foregroundStyle(Palette.muted)
                 }
                 Spacer()
-                YellowButton(title: "Взять \(result.rawValue)") {
+                CoralButton(title: "Взять \(result.rawValue)") {
                     model.updatePrefs { $0.level = result }
                     path.removeLast()
                 }
@@ -214,7 +225,7 @@ struct LevelTestScreen: View {
                 }
                 .padding(.top, 22)
                 Spacer()
-                YellowButton(title: "Дальше", enabled: picked != nil) {
+                CoralButton(title: "Дальше", enabled: picked != nil) {
                     if picked == item.phrase { right[item.level, default: 0] += 1 }
                     picked = nil
                     index += 1
@@ -297,7 +308,7 @@ struct TopicsScreen: View {
             ScrollView {
                 TopicGrid(selected: $selected).padding(.vertical, 22).padding(.trailing, 3)
             }
-            YellowButton(title: selected.isEmpty ? "Пропустить" : "Дальше · выбрано \(selected.count)") {
+            CoralButton(title: selected.isEmpty ? "Пропустить" : "Дальше · выбрано \(selected.count)") {
                 model.updatePrefs { p in p.topics = model.library.topics.filter { selected.contains($0) } }
                 path.append(.prefs)
             }
@@ -369,7 +380,7 @@ struct PrefsScreen: View {
                 .padding(.top, 18)
                 .padding(.trailing, 3)
             }
-            YellowButton(title: "Первое занятие · 3 карточки") { finish() }
+            CoralButton(title: "Первое занятие · 3 карточки") { finish() }
             LinkButton(title: "Пропустить") { model.updatePrefs { $0.onboarded = true } }.frame(maxWidth: .infinity)
         }
         .padding(.horizontal, 20)

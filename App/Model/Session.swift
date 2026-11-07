@@ -117,7 +117,13 @@ extension AppModel {
         return "«\(option)» — это «\(meaning)», а по смыслу нужно «\(wanted)»."
     }
 
-    func startSession(source: SessionSource, reviews: [String], news: [String]) {
+    func startSession(source: SessionSource, reviews: [String], news requested: [String]) {
+        // Past the free expressions, new ones wait for the purchase; reviews always go ahead.
+        let news = Array(requested.prefix(freeNewLeft))
+        if news.isEmpty && reviews.isEmpty && !requested.isEmpty {
+            showPaywall = true
+            return
+        }
         var state = SessionState(source: source, steps: Self.steps(reviews: reviews, news: news), studyDay: today)
         for id in reviews { state.entries[id] = SessionEntry(isReview: true) }
         for id in news { state.entries[id] = SessionEntry(isNew: true) }

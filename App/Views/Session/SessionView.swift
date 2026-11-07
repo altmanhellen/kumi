@@ -58,14 +58,12 @@ struct IntroStep: View {
                     }
                     .padding(.top, 18)
 
-                    PatternCard(style: .waves, variant: 1, blobStart: 0.78) {
+                    PatternCard(style: .waves, variant: 1, blobStart: 0.78, clearBlob: true) {
                         VStack(alignment: .leading, spacing: 0) {
                             Text("\(item.level.rawValue) · \(item.topics.first ?? item.structureSet)")
                                 .font(WPFont.nunito(14, .heavy))
                                 .foregroundStyle(Palette.inkSoft)
-                            Text(item.phrase)
-                                .font(WPFont.rubik(36))
-                                .fixedSize(horizontal: false, vertical: true)
+                            PhraseTitle(text: item.phrase)
                                 .padding(.top, 10)
                             Text(item.meaningEn)
                                 .font(WPFont.nunito(18, .bold))
@@ -94,7 +92,6 @@ struct IntroStep: View {
                             }
                         }
                         .padding(.leading, 22)
-                        .padding(.trailing, 76)
                         .padding(.vertical, 20)
                         .frame(minHeight: 300, alignment: .topLeading)
                     }
@@ -262,6 +259,7 @@ struct RecognizeStep: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
+            ScrollViewReader { proxy in
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     if step.retry {
@@ -284,6 +282,7 @@ struct RecognizeStep: View {
                             ) {
                                 if !checked { picked = o }
                             }
+                            .id(o)
                         }
                     }
                     .padding(.top, 20)
@@ -291,6 +290,13 @@ struct RecognizeStep: View {
                 }
                 .padding(.trailing, 3)
                 .padding(.bottom, 16)
+            }
+            // On small screens the verdict lands below the fold: bring it up, keeping the last option in view.
+            .onChange(of: checked) { _, on in
+                if on, let last = options.last {
+                    DispatchQueue.main.async { withAnimation { proxy.scrollTo(last, anchor: .top) } }
+                }
+            }
             }
             .padding(.horizontal, 20)
             if checked {

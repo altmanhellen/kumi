@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>UIAppFonts</key>
 	<array>
 		<string>Rubik-Bold.ttf</string>
@@ -11,6 +13,9 @@
 		<string>Nunito-Bold.ttf</string>
 		<string>Nunito-ExtraBold.ttf</string>
 		<string>Nunito-Italic.ttf</string>
+		<string>Montserrat-ExtraBold.ttf</string>
+		<string>Montserrat-Bold.ttf</string>
+		<string>MPLUSRounded1c-Black.ttf</string>
 		<string>Caveat-Bold.ttf</string>
 	</array>
 	<key>UISupportsDocumentBrowser</key>
