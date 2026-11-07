@@ -61,31 +61,33 @@ Kumi возвращает фразу как раз тогда, когда вы �
 
 ## English (U.S.) — добавить как локализацию
 
-**Подзаголовок / Subtitle** (19/30)
+**Подзаголовок / Subtitle** (28/30)
 
 ```
-Speak like a native
+English for Russian speakers
 ```
 
-**Рекламный текст / Promotional Text** (157/170)
+**Рекламный текст / Promotional Text** (148/170)
 
 ```
-Do a mistake or make a mistake? Learn the 326 English word combinations native speakers use every day, in 10-minute lessons with reviews timed so they stick.
+For Russian speakers: do a mistake or make a mistake? Learn 326 English word combinations natives use, in 10-minute lessons with well-timed reviews.
 ```
 
-**Ключевые слова / Keywords** (97/100)
+**Ключевые слова / Keywords** (98/100)
 
 ```
-collocations,english,phrases,vocabulary,idioms,speaking,esl,learn english,words,expressions,b1,b2
+collocations,english,phrases,vocabulary,russian,speaking,esl,learn english,words,expressions,b1,b2
 ```
 
-**Описание / Description** (1395/4000)
+**Описание / Description** (1440/4000)
 
 ```
+Kumi is made for Russian speakers: the app, explanations and translations are in Russian.
+
 You know English words, but your phrases don't sound quite right? Do a mistake instead of make a mistake, big rain instead of heavy rain. Native speakers talk in ready-made word combinations, and Kumi teaches exactly those.
 
 326 KEY COLLOCATIONS
-Not a dictionary of thousands of pages, but a focused course: the most common combinations from A2 to C1, grouped by topic — work, money, health, travel, relationships, news and more. A course you can actually finish. Explanations and translations are in Russian.
+Not a dictionary of thousands of pages, but a focused course: the most common combinations from A2 to C1, grouped by topic — work, money, health, travel, relationships, news and more. A course you can actually finish.
 
 HOW A LESSON WORKS
 • Meet: meaning, translation and real-life examples
