@@ -61,10 +61,10 @@ Kumi возвращает фразу как раз тогда, когда вы �
 
 ## English (U.S.) — добавить как локализацию
 
-**Подзаголовок / Subtitle** (28/30)
+**Подзаголовок / Subtitle** (19/30)
 
 ```
-English for Russian speakers
+Speak like a native
 ```
 
 **Рекламный текст / Promotional Text** (148/170)
