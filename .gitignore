@@ -1,6 +1,27 @@
+# Xcode
 build/
-*.xcuserstate
-xcuserdata/
-.DS_Store
 build-device/
+DerivedData/
+xcuserdata/
+*.xcuserstate
+*.xcarchive
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Signing (never commit)
+*.p12
+*.p8
+*.cer
+*.mobileprovision
+*.provisionprofile
+
+# macOS
+.DS_Store
+
+# Cloudflare / site
 site/.cf-home/
+site/.wrangler/
+site/node_modules/
+.env
+.env.*
