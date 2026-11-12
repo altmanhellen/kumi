@@ -153,8 +153,34 @@ enum AppTheme: String, Codable, CaseIterable, Identifiable {
 }
 
 enum Accent: String, Codable, CaseIterable {
-    case british, american
-    var locale: String { self == .british ? "en-GB" : "en-US" }
+    case british, american, australian, irish, indian, southAfrican
+
+    var locale: String {
+        switch self {
+        case .british: "en-GB"
+        case .american: "en-US"
+        case .australian: "en-AU"
+        case .irish: "en-IE"
+        case .indian: "en-IN"
+        case .southAfrican: "en-ZA"
+        }
+    }
+
+    var title: String {
+        switch self {
+        case .british: "Великобритания"
+        case .american: "США"
+        case .australian: "Австралия"
+        case .irish: "Ирландия"
+        case .indian: "Индия"
+        case .southAfrican: "ЮАР"
+        }
+    }
+
+    init?(locale: String) {
+        guard let a = Accent.allCases.first(where: { $0.locale == locale }) else { return nil }
+        self = a
+    }
 }
 
 struct Preferences: Codable, Equatable {

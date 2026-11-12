@@ -1,4 +1,5 @@
 import AuthenticationServices
+import AVFoundation
 import SwiftUI
 import UniformTypeIdentifiers
 
@@ -12,6 +13,7 @@ struct SettingsView: View {
     @State private var message: String?
     @State private var confirmReset = false
     @State private var confirmSignOut = false
+    @State private var openVoices = false
 
     var body: some View {
         ScrollViewReader { proxy in
@@ -169,6 +171,10 @@ struct SettingsView: View {
         .onAppear { if ProcessInfo.processInfo.arguments.contains("-wpBottom") { proxy.scrollTo("bottom") } }
         #endif
         }
+        .navigationDestination(isPresented: $openVoices) { VoicePicker(language: .english) }
+        #if DEBUG
+        .onAppear { if ProcessInfo.processInfo.arguments.contains("-wpVoices") { DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { openVoices = true } } }
+        #endif
         .screenBackground()
         .statusBarBackdrop()
         .toolbar(.hidden, for: .navigationBar)
@@ -270,15 +276,23 @@ enum VoiceLanguage {
 struct VoicePicker: View {
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.scenePhase) private var scenePhase
     let language: VoiceLanguage
     var onboarding = false
+    @State private var showLegacy = false
+    @State private var personalStatus = AVSpeechSynthesizer.personalVoiceAuthorizationStatus
 
-    private var voices: [VoiceInfo] { Speech.voices(language: language.prefix) }
+    private var catalog: VoiceCatalog { VoiceCatalog.shared }
+    private var voices: [VoiceInfo] { catalog.voices(language: language.prefix) }
+    private var modern: [VoiceInfo] { voices.filter(\.isModern).sorted { modernOrder($0) < modernOrder($1) } }
+    private var plain: [VoiceInfo] { voices.filter { !$0.isModern && !$0.isLegacy } }
+    private var legacy: [VoiceInfo] { voices.filter { !$0.isModern && $0.isLegacy } }
 
-    private var selected: String? {
-        let id = language == .english ? model.prefs.englishVoiceId : model.prefs.russianVoiceId
-        return id ?? Speech.voice(id: nil, fallbackLanguage: language == .english ? model.prefs.accent.locale : "ru-RU")?.identifier
-    }
+    private var chosenId: String? { language == .english ? model.prefs.englishVoiceId : model.prefs.russianVoiceId }
+    private var systemLocale: String { language == .english ? model.prefs.accent.locale : "ru-RU" }
+    private var systemVoice: VoiceInfo? { catalog.system(locale: systemLocale) }
+    /// A saved voice that was deleted from the iPhone falls back to the iPhone's own voice.
+    private var usesSystem: Bool { chosenId == nil || catalog.info(id: chosenId) == nil }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -291,23 +305,73 @@ struct VoicePicker: View {
             }
             .padding(.leading, -6)
             ScreenTitle(text: language.title).padding(.top, 18)
-            Text("Голоса iOS на этом iPhone. Нажмите на динамик, чтобы послушать.")
+            Text("Нажмите на динамик, чтобы послушать.")
                 .font(WPFont.nunito(15)).foregroundStyle(Palette.muted).padding(.top, 6)
             ScrollView {
-                PaperBox(variant: 0) {
-                    ForEach(Array(voices.enumerated()), id: \.element.id) { i, v in
-                        if i > 0 {
-                            DashedDivider.Line().stroke(Palette.divider, style: StrokeStyle(lineWidth: 2, dash: [6, 5])).frame(height: 2)
+                VStack(alignment: .leading, spacing: 0) {
+                    PaperBox(variant: 0) {
+                        systemRow
+                        if language == .english {
+                            divider
+                            accentMenu
                         }
-                        row(v)
                     }
-                    if voices.isEmpty {
-                        Text("На этом устройстве нет голосов для этого языка.").font(WPFont.nunito(15)).padding(16)
+                    .padding(.top, 14)
+                    note("Голос, который выбран для этого языка в Настройках iPhone. Если поменять его там, Kumi тоже заговорит новым голосом.")
+
+                    if !catalog.loaded {
+                        ProgressView().frame(maxWidth: .infinity).padding(.top, 30)
+                    } else {
+                        header("Естественные голоса")
+                        if modern.isEmpty {
+                            PaperBox(variant: 1) {
+                                Text("На этом iPhone пока нет улучшенных и премиум-голосов. Как их скачать, написано внизу.")
+                                    .font(WPFont.nunito(15)).foregroundStyle(Palette.text).padding(14)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                            }
+                        } else {
+                            list(modern, variant: 1)
+                        }
+                        if language == .english && personalStatus == .notDetermined {
+                            Button(action: askPersonalVoice) {
+                                SettingsRow(title: "Мой личный голос", subtitle: "если вы записали его в Настройках iPhone", value: "разрешить", chevron: false)
+                            }
+                            .buttonStyle(.plain)
+                            .background(Palette.paper, in: Radii.shape(2))
+                            .overlay(Radii.shape(2).stroke(Palette.outline, lineWidth: 2.5))
+                            .padding(.top, 10)
+                        }
+                        if !plain.isEmpty {
+                            header("Обычные голоса")
+                            list(plain, variant: 2)
+                        }
+                        if !legacy.isEmpty {
+                            Button { withAnimation { showLegacy.toggle() } } label: {
+                                HStack(spacing: 6) {
+                                    Text("Старые голоса · \(legacy.count)").font(WPFont.nunito(15, .heavy)).underline()
+                                    Image(systemName: showLegacy ? "chevron.up" : "chevron.down").font(.system(size: 13, weight: .bold))
+                                        .foregroundStyle(Palette.chevron)
+                                }
+                                .foregroundStyle(Palette.text).frame(minHeight: 44)
+                            }
+                            .buttonStyle(.plain)
+                            .padding(.top, 14)
+                            if showLegacy { list(legacy, variant: 3) }
+                        }
                     }
+                    header("Как скачать новые голоса")
+                    VStack(alignment: .leading, spacing: 6) {
+                        ForEach(Array(downloadSteps.enumerated()), id: \.offset) { i, step in
+                            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                                Text("\(i + 1).").font(WPFont.nunito(14, .heavy))
+                                Text(step).font(WPFont.nunito(14)).fixedSize(horizontal: false, vertical: true)
+                            }
+                        }
+                    }
+                    .foregroundStyle(Palette.muted)
+                    .padding(.horizontal, 4)
                 }
-                .padding(.top, 14)
-                Text("Другие голоса можно скачать в Настройках iPhone: Универсальный доступ → Чтение вслух (в более ранних версиях iOS — «Устный контент») → Голоса → \(language.settingsName).")
-                    .font(WPFont.nunito(13)).foregroundStyle(Palette.muted).padding(.top, 10).padding(.horizontal, 4)
+                .padding(.bottom, 30)
             }
         }
         .padding(.horizontal, 20)
@@ -315,16 +379,105 @@ struct VoicePicker: View {
         .screenBackground()
         .statusBarBackdrop()
         .toolbar(.hidden, for: .navigationBar)
+        .onAppear { catalog.load() }
+        // Voices downloaded in the iPhone settings appear when the person comes back.
+        .onChange(of: scenePhase) { _, phase in if phase == .active { catalog.load(force: true) } }
+    }
+
+    private var downloadSteps: [String] {
+        [
+            "Откройте Настройки iPhone → Универсальный доступ → Чтение вслух (в iOS до 17 — «Устный контент»).",
+            "Нажмите «Голоса» → \(language.settingsName).",
+            "Выберите голос с пометкой «Улучшенный» или «Премиум» и нажмите на значок загрузки.",
+            "Вернитесь в Kumi: новый голос появится в этом списке.",
+        ]
+    }
+
+    private var systemRow: some View {
+        let on = usesSystem
+        return HStack(spacing: 8) {
+            Button {
+                model.updatePrefs { if language == .english { $0.englishVoiceId = nil } else { $0.russianVoiceId = nil } }
+            } label: {
+                HStack(spacing: 12) {
+                    RadioDot(on: on)
+                    VStack(alignment: .leading, spacing: 0) {
+                        Text("Как в iPhone").font(WPFont.nunito(16, .heavy))
+                        Text(systemVoice.map { "\($0.name) · \($0.regionTitle)" } ?? (catalog.loaded ? "голос iOS по умолчанию" : " "))
+                            .font(WPFont.nunito(13)).foregroundStyle(on ? Palette.inkSoft : Palette.muted)
+                    }
+                    Spacer()
+                }
+                .foregroundStyle(on ? Palette.ink : Palette.text)
+                .padding(.leading, 14)
+                .frame(minHeight: 56)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityAddTraits(on ? .isSelected : [])
+            ListenButton(label: "Послушать голос iPhone") {
+                Speech.shared.speak(language.sample, voiceId: nil, language: systemLocale)
+            }
+            .padding(.trailing, 6)
+        }
+        .background(on ? Palette.teal : .clear)
+    }
+
+    private var accentMenu: some View {
+        Menu {
+            ForEach(Accent.allCases.filter { catalog.systemIds[$0.locale] != nil }, id: \.self) { a in
+                Button(a.title) { model.updatePrefs { $0.accent = a; $0.englishVoiceId = nil } }
+            }
+        } label: {
+            SettingsRow(title: "Акцент", subtitle: "для голоса iPhone", value: model.prefs.accent.title)
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var divider: some View {
+        DashedDivider.Line().stroke(Palette.divider, style: StrokeStyle(lineWidth: 2, dash: [6, 5])).frame(height: 2)
+    }
+
+    private func header(_ title: String) -> some View {
+        Text(title).font(WPFont.rubik(18, false)).foregroundStyle(Palette.text).padding(.top, 26).padding(.bottom, 10)
+    }
+
+    private func note(_ text: String) -> some View {
+        Text(text).font(WPFont.nunito(13)).foregroundStyle(Palette.muted).padding(.horizontal, 4).padding(.top, 8)
+            .fixedSize(horizontal: false, vertical: true)
+    }
+
+    private func list(_ items: [VoiceInfo], variant: Int) -> some View {
+        PaperBox(variant: variant) {
+            ForEach(Array(items.enumerated()), id: \.element.id) { i, v in
+                if i > 0 { divider }
+                row(v)
+            }
+        }
+    }
+
+    /// Personal Voice first, then premium before enhanced, then the person's accent before the others.
+    private func modernOrder(_ v: VoiceInfo) -> (Int, Int, Int, String, String) {
+        (v.isPersonal ? 0 : 1, -v.quality.rawValue, v.language == systemLocale ? 0 : 1, v.language, v.name)
+    }
+
+    private func askPersonalVoice() {
+        AVSpeechSynthesizer.requestPersonalVoiceAuthorization { status in
+            Task { @MainActor in
+                personalStatus = status
+                VoiceCatalog.shared.load(force: true)
+            }
+        }
     }
 
     private func row(_ v: VoiceInfo) -> some View {
-        let on = v.id == selected
+        let on = !usesSystem && v.id == chosenId
         return HStack(spacing: 8) {
             Button {
                 model.updatePrefs {
                     if language == .english {
                         $0.englishVoiceId = v.id
-                        $0.accent = v.language == "en-US" ? .american : .british
+                        if let a = Accent(locale: v.language) { $0.accent = a }
                     } else {
                         $0.russianVoiceId = v.id
                     }
@@ -333,7 +486,7 @@ struct VoicePicker: View {
                 HStack(spacing: 12) {
                     RadioDot(on: on)
                     VStack(alignment: .leading, spacing: 0) {
-                        VoiceName(voice: v, prefix: language.prefix)
+                        Text(v.name).font(WPFont.nunito(16, .heavy))
                         Text(v.regionTitle).font(WPFont.nunito(13)).foregroundStyle(on ? Palette.inkSoft : Palette.muted)
                     }
                     Spacer()
@@ -382,18 +535,5 @@ struct TopicsSettings: View {
         .screenBackground()
         .statusBarBackdrop()
         .toolbar(.hidden, for: .navigationBar)
-    }
-}
-
-/// Voice name, with «(системный)» after the system default voice for the language.
-struct VoiceName: View {
-    let voice: VoiceInfo
-    let prefix: String
-
-    var body: some View {
-        (Text(voice.name).font(WPFont.nunito(16, .heavy))
-         + Text(voice.id == Speech.systemVoiceId(language: prefix) ? " (системный)" : "")
-            .font(WPFont.nunito(16, .semibold))
-            .foregroundColor(Color(hex: 0x645C52)))
     }
 }

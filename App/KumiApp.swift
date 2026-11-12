@@ -11,7 +11,10 @@ struct KumiApp: App {
             RootView()
                 .environment(model)
                 .environment(store)
-                .task { store.start(model: model) }
+                .task {
+                    VoiceCatalog.shared.load()
+                    store.start(model: model)
+                }
                 // Text grows with the system setting up to the largest standard size; the accessibility
                 // sizes beyond that would break the hand-drawn cards.
                 .dynamicTypeSize(...DynamicTypeSize.xxxLarge)

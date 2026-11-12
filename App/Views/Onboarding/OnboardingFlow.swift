@@ -324,13 +324,9 @@ struct PrefsScreen: View {
     @Environment(AppModel.self) private var model
     @Binding var path: [OnboardingStep]
 
+    /// The iPhone's own voice for each of the two main accents.
     private var accentVoices: [(Accent, VoiceInfo)] {
-        let all = Speech.voices(language: "en")
-        return [Accent.british, .american].compactMap { a in
-            let preferred = Speech.voice(id: nil, fallbackLanguage: a.locale)?.identifier
-            guard let v = all.first(where: { $0.id == preferred }) ?? all.first(where: { $0.language == a.locale }) else { return nil }
-            return (a, v)
-        }
+        [Accent.british, .american].compactMap { a in VoiceCatalog.shared.system(locale: a.locale).map { (a, $0) } }
     }
 
     var body: some View {
@@ -368,7 +364,7 @@ struct PrefsScreen: View {
                     .padding(.top, 10)
                     Button { path.append(.voices) } label: {
                         HStack(spacing: 4) {
-                            Text("Все голоса на iPhone · \(Speech.voices(language: "en").count)").font(WPFont.nunito(15, .heavy)).underline()
+                            Text("Все голоса на iPhone · \(VoiceCatalog.shared.voices(language: "en").count)").font(WPFont.nunito(15, .heavy)).underline()
                             Image(systemName: "chevron.right").font(.system(size: 13, weight: .bold)).foregroundStyle(Palette.chevron)
                         }
                         .foregroundStyle(Palette.text)
@@ -389,16 +385,16 @@ struct PrefsScreen: View {
     }
 
     private func voiceRow(_ accent: Accent, _ v: VoiceInfo, _ i: Int) -> some View {
-        let currentId = model.prefs.englishVoiceId ?? Speech.voice(id: nil, fallbackLanguage: model.prefs.accent.locale)?.identifier
-        let on = currentId == v.id
+        let on = model.prefs.englishVoiceId == nil ? model.prefs.accent == accent : model.prefs.englishVoiceId == v.id
         return HStack(spacing: 8) {
             Button {
-                model.updatePrefs { $0.accent = accent; $0.englishVoiceId = v.id }
+                // The iPhone's own voice for this accent, so a voice changed later in iOS settings is followed.
+                model.updatePrefs { $0.accent = accent; $0.englishVoiceId = nil }
             } label: {
                 HStack(spacing: 12) {
                     RadioDot(on: on)
                     VStack(alignment: .leading, spacing: 0) {
-                        VoiceName(voice: v, prefix: "en")
+                        Text(v.name).font(WPFont.nunito(16, .heavy))
                         Text(accent == .british ? "Великобритания" : "США").font(WPFont.nunito(14)).foregroundStyle(on ? Palette.inkSoft : Palette.muted)
                     }
                     Spacer()
