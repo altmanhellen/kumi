@@ -4,6 +4,9 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 struct SettingsView: View {
+    #if DEBUG
+    @MainActor static var debugOpened = false
+    #endif
     @Environment(AppModel.self) private var model
     @Environment(Store.self) private var store
     @Environment(\.colorScheme) private var scheme
@@ -30,10 +33,13 @@ struct SettingsView: View {
                         SettingsRow(title: "Английский", subtitle: "выражения и примеры", value: model.englishVoiceName)
                     }
                     DashedDivider()
-                    Menu {
-                        ForEach([0.5, 0.6, 0.7, 0.8], id: \.self) { r in
-                            Button(String(format: "%.1f×", r)) { model.updatePrefs { $0.slowRate = r } }
-                        }
+                    NavigationLink {
+                        ChoiceScreen(title: "Медленное воспроизведение",
+                                     note: "Скорость, с которой звучит выражение по кнопке медленного воспроизведения.",
+                                     options: [0.5, 0.6, 0.7, 0.8].map { ChoiceOption(value: $0, title: String(format: "%.1f×", $0)) },
+                                     selected: model.prefs.slowRate,
+                                     onSelect: { r in model.updatePrefs { $0.slowRate = r } },
+                                     onPreview: { r in Speech.shared.speak(VoiceLanguage.english.sample, voiceId: model.prefs.englishVoiceId, language: model.prefs.accent.locale, slow: true, slowRate: r) })
                     } label: {
                         SettingsRow(title: "Медленное воспроизведение", value: String(format: "%.1f×", model.prefs.slowRate))
                     }
@@ -42,10 +48,12 @@ struct SettingsView: View {
 
                 section("Обучение")
                 PaperBox(variant: 1) {
-                    Menu {
-                        ForEach(Level.allCases) { l in
-                            Button("\(l.rawValue) · \(l.name)") { model.updatePrefs { $0.level = l } }
-                        }
+                    NavigationLink {
+                        ChoiceScreen(title: "Уровень",
+                                     note: "С этого уровня начинаются новые выражения. Выражения других уровней остаются в каталоге.",
+                                     options: Level.allCases.map { ChoiceOption(value: $0, title: "\($0.rawValue) · \($0.name)", subtitle: $0.blurb) },
+                                     selected: model.prefs.level,
+                                     onSelect: { l in model.updatePrefs { $0.level = l } })
                     } label: {
                         SettingsRow(title: "Уровень", value: model.prefs.level.rawValue)
                     }
@@ -54,10 +62,12 @@ struct SettingsView: View {
                         SettingsRow(title: "Темы", value: model.prefs.topics.isEmpty ? "все" : "\(model.prefs.topics.count)")
                     }
                     DashedDivider()
-                    Menu {
-                        ForEach([5, 10, 15, 20], id: \.self) { n in
-                            Button("\(n)") { model.updatePrefs { $0.newPerDay = n } }
-                        }
+                    NavigationLink {
+                        ChoiceScreen(title: "Новых в день",
+                                     note: "Сколько новых выражений Kumi предлагает за день. Повторения сюда не входят.",
+                                     options: [5, 10, 15, 20].map { ChoiceOption(value: $0, title: "\($0)") },
+                                     selected: model.prefs.newPerDay,
+                                     onSelect: { n in model.updatePrefs { $0.newPerDay = n } })
                     } label: {
                         SettingsRow(title: "Новых в день", value: "не больше \(model.prefs.newPerDay)")
                     }
@@ -71,10 +81,14 @@ struct SettingsView: View {
                     .toggleStyle(WPToggleStyle())
                     .padding(.horizontal, 14).padding(.vertical, 8)
                     DashedDivider()
-                    Menu {
-                        ForEach([0.85, 0.88, 0.9, 0.92, 0.95], id: \.self) { r in
-                            Button("\(Int(r * 100))%") { model.updatePrefs { $0.desiredRetention = r } }
-                        }
+                    NavigationLink {
+                        ChoiceScreen(title: "Частота повторений",
+                                     note: "Какую долю выражений вы хотите помнить к моменту повторения. Чем выше процент, тем чаще повторения.",
+                                     options: [0.85, 0.88, 0.9, 0.92, 0.95].map {
+                                         ChoiceOption(value: $0, title: "\(Int(($0 * 100).rounded()))%", subtitle: $0 == 0.9 ? "по умолчанию" : nil)
+                                     },
+                                     selected: model.prefs.desiredRetention,
+                                     onSelect: { r in model.updatePrefs { $0.desiredRetention = r } })
                     } label: {
                         SettingsRow(title: "Частота повторений", subtitle: "Выше % — чаще повторения", value: "\(Int(model.prefs.desiredRetention * 100))%")
                     }
@@ -98,10 +112,11 @@ struct SettingsView: View {
 
                 section("Оформление")
                 PaperBox(variant: 3) {
-                    Menu {
-                        ForEach(AppTheme.allCases) { t in
-                            Button(t.title) { model.updatePrefs { $0.theme = t } }
-                        }
+                    NavigationLink {
+                        ChoiceScreen(title: "Тема",
+                                     options: AppTheme.allCases.map { ChoiceOption(value: $0, title: $0.title) },
+                                     selected: model.prefs.theme,
+                                     onSelect: { t in model.updatePrefs { $0.theme = t } })
                     } label: {
                         SettingsRow(title: "Тема", value: model.prefs.theme.title)
                     }
@@ -173,7 +188,8 @@ struct SettingsView: View {
         }
         .navigationDestination(isPresented: $openVoices) { VoicePicker(language: .english) }
         #if DEBUG
-        .onAppear { if ProcessInfo.processInfo.arguments.contains("-wpVoices") { DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { openVoices = true } } }
+        .onAppear { if ProcessInfo.processInfo.arguments.contains("-wpVoices") && !Self.debugOpened { Self.debugOpened = true; DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { openVoices = true } }
+        }
         #endif
         .screenBackground()
         .statusBarBackdrop()
@@ -424,10 +440,15 @@ struct VoicePicker: View {
     }
 
     private var accentMenu: some View {
-        Menu {
-            ForEach(Accent.allCases.filter { catalog.systemIds[$0.locale] != nil }, id: \.self) { a in
-                Button(a.title) { model.updatePrefs { $0.accent = a; $0.englishVoiceId = nil } }
-            }
+        NavigationLink {
+            ChoiceScreen(title: "Акцент",
+                         note: "Kumi возьмёт голос iPhone с этим акцентом.",
+                         options: Accent.allCases.filter { catalog.systemIds[$0.locale] != nil }.map { a in
+                             ChoiceOption(value: a, title: a.title, subtitle: catalog.system(locale: a.locale)?.name)
+                         },
+                         selected: model.prefs.accent,
+                         onSelect: { a in model.updatePrefs { $0.accent = a; $0.englishVoiceId = nil } },
+                         onPreview: { a in Speech.shared.speak(VoiceLanguage.english.sample, voiceId: nil, language: a.locale) })
         } label: {
             SettingsRow(title: "Акцент", subtitle: "для голоса iPhone", value: model.prefs.accent.title)
         }
@@ -535,5 +556,88 @@ struct TopicsSettings: View {
         .screenBackground()
         .statusBarBackdrop()
         .toolbar(.hidden, for: .navigationBar)
+    }
+}
+
+
+struct ChoiceOption<Value: Hashable>: Identifiable {
+    let value: Value
+    let title: String
+    var subtitle: String?
+    var id: Value { value }
+}
+
+/// A setting with a few fixed values, opened as its own screen with a checkmark list,
+/// the way iOS Settings shows Calendar → Default Calendar or the temperature unit.
+struct ChoiceScreen<Value: Hashable>: View {
+    @Environment(\.dismiss) private var dismiss
+    let title: String
+    var note: String?
+    let options: [ChoiceOption<Value>]
+    let selected: Value
+    let onSelect: (Value) -> Void
+    /// Optional speaker button on each row, for speeds and accents.
+    var onPreview: ((Value) -> Void)?
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 0) {
+                Button { dismiss() } label: {
+                    HStack(spacing: 2) {
+                        Image(systemName: "chevron.left").font(.system(size: 17, weight: .bold))
+                        Text("Настройки").font(WPFont.nunito(16, .heavy))
+                    }
+                    .foregroundStyle(Palette.text).frame(minHeight: 44)
+                }
+                .padding(.leading, -6)
+                ScreenTitle(text: title).padding(.top, 18)
+                PaperBox(variant: 0) {
+                    ForEach(Array(options.enumerated()), id: \.element.id) { i, o in
+                        if i > 0 { DashedDivider() }
+                        row(o)
+                    }
+                }
+                .padding(.top, 18)
+                if let note {
+                    Text(note).font(WPFont.nunito(13)).foregroundStyle(Palette.muted)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.horizontal, 4).padding(.top, 8)
+                }
+            }
+            .padding(.horizontal, 20).padding(.top, 8).padding(.bottom, 30)
+        }
+        .screenBackground()
+        .statusBarBackdrop()
+        .toolbar(.hidden, for: .navigationBar)
+    }
+
+    private func row(_ o: ChoiceOption<Value>) -> some View {
+        let on = o.value == selected
+        return HStack(spacing: 8) {
+            Button { onSelect(o.value) } label: {
+                HStack(spacing: 10) {
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text(o.title).font(WPFont.nunito(16, .heavy)).foregroundStyle(Palette.text)
+                        if let s = o.subtitle { Text(s).font(WPFont.nunito(14)).foregroundStyle(Palette.muted) }
+                    }
+                    Spacer(minLength: 8)
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 17, weight: .bold))
+                        .foregroundStyle(Palette.blue)
+                        .opacity(on ? 1 : 0)
+                }
+                .padding(.leading, 14)
+                .padding(.trailing, onPreview == nil ? 14 : 0)
+                .padding(.vertical, 6)
+                .frame(minHeight: 56)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityAddTraits(on ? .isSelected : [])
+            if let onPreview {
+                ListenButton(label: "Послушать: \(o.title)", size: 40) { onPreview(o.value) }
+                    .padding(.trailing, 8)
+            }
+        }
     }
 }
