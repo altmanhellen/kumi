@@ -632,12 +632,20 @@ struct ChoiceScreen<Value: Hashable>: View {
                 .frame(minHeight: 56)
                 .contentShape(Rectangle())
             }
-            .buttonStyle(.plain)
+            .buttonStyle(ChoiceRowStyle())
             .accessibilityAddTraits(on ? .isSelected : [])
             if let onPreview {
                 ListenButton(label: "Послушать: \(o.title)", size: 40) { onPreview(o.value) }
                     .padding(.trailing, 8)
             }
         }
+    }
+}
+
+/// Pressed rows get a light background, as in iOS Settings; the text keeps its full colour.
+struct ChoiceRowStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .background(configuration.isPressed ? Palette.divider.opacity(0.5) : .clear)
     }
 }
